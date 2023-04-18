@@ -1,0 +1,83 @@
+{
+ "id": "Alosa.v1",
+ "assembly": {
+  "file": "/workdir/azwad/shad_genome/genomes/Alosa.v1_genome.fna",
+  "scaffold-count": 273,
+  "span": 920207828
+ },
+ "fields": [
+  {
+   "id": "identifiers",
+   "type": "identifier"
+  },
+  {
+   "id": "gc",
+   "preload": true,
+   "scale": "scaleLinear",
+   "name": "GC",
+   "datatype": "float",
+   "range": [
+    0.2633,
+    0.5885
+   ],
+   "type": "variable"
+  },
+  {
+   "preload": true,
+   "scale": "scaleLog",
+   "id": "length",
+   "name": "Length",
+   "clamp": false,
+   "datatype": "integer",
+   "range": [
+    16343,
+    54799149
+   ],
+   "type": "variable"
+  },
+  {
+   "scale": "scaleLinear",
+   "id": "ncount",
+   "name": "N count",
+   "datatype": "integer",
+   "range": [
+    0,
+    63500
+   ],
+   "type": "variable"
+  },
+  {
+   "datatype": "mixed",
+   "type": "array",
+   "id": "busco",
+   "name": "Busco",
+   "children": [
+    {
+     "version": "5.2.2",
+     "set": "actinopterygii_odb10",
+     "count": 3640,
+     "file": "/workdir/azwad/shad_genome/busco_outputs/Alosa.v1_busco/run_actinopterygii_odb10/full_table.tsv",
+     "id": "actinopterygii_odb10_busco",
+     "type": "multiarray",
+     "category_slot": 1,
+     "headers": [
+      "Busco id",
+      "Status"
+     ],
+     "parent": "busco"
+    }
+   ]
+  }
+ ],
+ "links": {},
+ "name": "Alosa.v1",
+ "plot": {
+  "x": "gc",
+  "z": "length"
+ },
+ "record_type": "record",
+ "records": 273,
+ "taxon": {},
+ "version": 1,
+ "revision": 0
+}

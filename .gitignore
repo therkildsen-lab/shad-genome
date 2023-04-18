@@ -1,0 +1,9 @@
+annotation/
+assembly/
+blobtools/
+busco_downloads/
+busco_outputs/
+config/
+nohup/
+other_genomes/
+reads/

@@ -1,0 +1,622 @@
+{
+ "id": "fAloSap1",
+ "assembly": {
+  "accession": "GCA_018492685.1",
+  "alias": "fAloSap1.pri",
+  "bioproject": "PRJNA728145",
+  "biosample": "SAMN18857608",
+  "level": "chromosome",
+  "prefix": "JAHDTN01",
+  "scaffold-count": 74,
+  "span": 903581644,
+  "url": "ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/018/492/685/GCA_018492685.1_fAloSap1.pri/GCA_018492685.1_fAloSap1.pri_genomic.fna.gz",
+  "file": "genomes/fAloSap1/assembly/Alosa_sapidissima_fAloSap1.pri_genome.fna"
+ },
+ "fields": [
+  {
+   "id": "identifiers",
+   "type": "identifier"
+  },
+  {
+   "id": "gc",
+   "preload": true,
+   "scale": "scaleLinear",
+   "name": "GC",
+   "datatype": "float",
+   "range": [
+    0.2586,
+    0.5483
+   ],
+   "type": "variable"
+  },
+  {
+   "preload": true,
+   "scale": "scaleLog",
+   "id": "length",
+   "name": "Length",
+   "clamp": false,
+   "datatype": "integer",
+   "range": [
+    2376,
+    56504578
+   ],
+   "type": "variable"
+  },
+  {
+   "scale": "scaleLinear",
+   "id": "ncount",
+   "name": "N count",
+   "datatype": "integer",
+   "range": [
+    0,
+    460672
+   ],
+   "type": "variable"
+  },
+  {
+   "datatype": "mixed",
+   "type": "array",
+   "id": "busco",
+   "name": "Busco",
+   "children": [
+    {
+     "version": "5.2.2",
+     "set": "actinopterygii_odb10",
+     "count": 3640,
+     "file": "busco_outputs/AloSap1_busco/run_actinopterygii_odb10/full_table.tsv",
+     "id": "actinopterygii_odb10_busco",
+     "type": "multiarray",
+     "category_slot": 1,
+     "headers": [
+      "Busco id",
+      "Status"
+     ],
+     "parent": "busco"
+    },
+    {
+     "version": "5.2.2",
+     "set": "eukaryota_odb10",
+     "count": 255,
+     "file": "busco_outputs/AloSap1_eukaryota/run_eukaryota_odb10/full_table.tsv",
+     "id": "eukaryota_odb10_busco",
+     "type": "multiarray",
+     "category_slot": 1,
+     "headers": [
+      "Busco id",
+      "Status"
+     ],
+     "parent": "busco"
+    },
+    {
+     "version": "5.2.2",
+     "set": "metazoa_odb10",
+     "count": 954,
+     "file": "busco_outputs/AloSap1_metazoa/run_metazoa_odb10/full_table.tsv",
+     "id": "metazoa_odb10_busco",
+     "type": "multiarray",
+     "category_slot": 1,
+     "headers": [
+      "Busco id",
+      "Status"
+     ],
+     "parent": "busco"
+    },
+    {
+     "version": "5.2.2",
+     "set": "vertebrata_odb10",
+     "count": 3354,
+     "file": "busco_outputs/AloSap1_vertebrata/run_vertebrata_odb10/full_table.tsv",
+     "id": "vertebrata_odb10_busco",
+     "type": "multiarray",
+     "category_slot": 1,
+     "headers": [
+      "Busco id",
+      "Status"
+     ]
+    }
+   ]
+  },
+  {
+   "datatype": "float",
+   "type": "variable",
+   "scale": "scaleLog",
+   "id": "coverage",
+   "name": "coverage",
+   "children": [
+    {
+     "id": "base_coverage",
+     "clamp": 0.01,
+     "range": [
+      0,
+      592.7553
+     ],
+     "children": [
+      {
+       "id": "fAloSap1_pacbio_cov",
+       "file": "genomes/fAloSap1/reads/pacbio/fAloSap1_pacbio.bam=fAloSap1_pacbio",
+       "type": "variable",
+       "parent": "base_coverage"
+      }
+     ],
+     "parent": "coverage"
+    },
+    {
+     "id": "read_coverage",
+     "datatype": "integer",
+     "clamp": 1,
+     "range": [
+      0,
+      192730
+     ],
+     "children": [
+      {
+       "id": "fAloSap1_pacbio_read_cov",
+       "file": "genomes/fAloSap1/reads/pacbio/fAloSap1_pacbio.bam=fAloSap1_pacbio",
+       "reads_mapped": 8562253,
+       "reads_unmapped": 12842,
+       "type": "variable",
+       "parent": "read_coverage"
+      }
+     ],
+     "parent": "coverage"
+    }
+   ]
+  },
+  {
+   "datatype": "string",
+   "type": "category",
+   "id": "taxonomy",
+   "name": "Taxonomy",
+   "children": [
+    {
+     "id": "bestsumorder",
+     "children": [
+      {
+       "id": "bestsumorder_positions",
+       "name": "bestsumorder_positions",
+       "type": "multiarray",
+       "datatype": "mixed",
+       "preload": false,
+       "active": false,
+       "files": [
+        "genomes/fAloSap1/hits/fAloSap1.blast.out"
+       ],
+       "headers": [
+        "taxid",
+        "start",
+        "end",
+        "score",
+        "subject",
+        "index",
+        "title"
+       ],
+       "parent": "bestsumorder"
+      },
+      {
+       "id": "bestsumorder_superkingdom",
+       "name": "bestsumorder_superkingdom",
+       "type": "category",
+       "data": [
+        {
+         "scale": "scaleLinear",
+         "id": "bestsumorder_superkingdom_cindex",
+         "name": "bestsumorder_superkingdom_cindex",
+         "datatype": "integer",
+         "range": [
+          0,
+          0
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_superkingdom"
+        },
+        {
+         "scale": "scaleLog",
+         "id": "bestsumorder_superkingdom_score",
+         "name": "bestsumorder_superkingdom_score",
+         "clamp": 1,
+         "datatype": "float",
+         "range": [
+          0,
+          412422.0
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_superkingdom"
+        },
+        {
+         "id": "bestsumorder_superkingdom_positions",
+         "name": "bestsumorder_superkingdom_positions",
+         "type": "multiarray",
+         "datatype": "string",
+         "preload": false,
+         "active": false,
+         "linked_field": "bestsumorder_positions",
+         "category_slot": 0,
+         "headers": [
+          "name"
+         ],
+         "parent": "bestsumorder_superkingdom"
+        }
+       ],
+       "parent": "bestsumorder"
+      },
+      {
+       "id": "bestsumorder_kingdom",
+       "name": "bestsumorder_kingdom",
+       "type": "category",
+       "data": [
+        {
+         "scale": "scaleLinear",
+         "id": "bestsumorder_kingdom_cindex",
+         "name": "bestsumorder_kingdom_cindex",
+         "datatype": "integer",
+         "range": [
+          0,
+          0
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_kingdom"
+        },
+        {
+         "scale": "scaleLog",
+         "id": "bestsumorder_kingdom_score",
+         "name": "bestsumorder_kingdom_score",
+         "clamp": 1,
+         "datatype": "float",
+         "range": [
+          0,
+          412422.0
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_kingdom"
+        },
+        {
+         "id": "bestsumorder_kingdom_positions",
+         "name": "bestsumorder_kingdom_positions",
+         "type": "multiarray",
+         "datatype": "string",
+         "preload": false,
+         "active": false,
+         "linked_field": "bestsumorder_positions",
+         "category_slot": 0,
+         "headers": [
+          "name"
+         ],
+         "parent": "bestsumorder_kingdom"
+        }
+       ],
+       "parent": "bestsumorder"
+      },
+      {
+       "id": "bestsumorder_phylum",
+       "name": "bestsumorder_phylum",
+       "type": "category",
+       "data": [
+        {
+         "scale": "scaleLinear",
+         "id": "bestsumorder_phylum_cindex",
+         "name": "bestsumorder_phylum_cindex",
+         "datatype": "integer",
+         "range": [
+          0,
+          0
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_phylum"
+        },
+        {
+         "scale": "scaleLog",
+         "id": "bestsumorder_phylum_score",
+         "name": "bestsumorder_phylum_score",
+         "clamp": 1,
+         "datatype": "float",
+         "range": [
+          0,
+          412422.0
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_phylum"
+        },
+        {
+         "id": "bestsumorder_phylum_positions",
+         "name": "bestsumorder_phylum_positions",
+         "type": "multiarray",
+         "datatype": "string",
+         "preload": false,
+         "active": false,
+         "linked_field": "bestsumorder_positions",
+         "category_slot": 0,
+         "headers": [
+          "name"
+         ],
+         "parent": "bestsumorder_phylum"
+        }
+       ],
+       "parent": "bestsumorder"
+      },
+      {
+       "id": "bestsumorder_class",
+       "name": "bestsumorder_class",
+       "type": "category",
+       "data": [
+        {
+         "scale": "scaleLinear",
+         "id": "bestsumorder_class_cindex",
+         "name": "bestsumorder_class_cindex",
+         "datatype": "integer",
+         "range": [
+          0,
+          0
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_class"
+        },
+        {
+         "scale": "scaleLog",
+         "id": "bestsumorder_class_score",
+         "name": "bestsumorder_class_score",
+         "clamp": 1,
+         "datatype": "float",
+         "range": [
+          0,
+          412422.0
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_class"
+        },
+        {
+         "id": "bestsumorder_class_positions",
+         "name": "bestsumorder_class_positions",
+         "type": "multiarray",
+         "datatype": "string",
+         "preload": false,
+         "active": false,
+         "linked_field": "bestsumorder_positions",
+         "category_slot": 0,
+         "headers": [
+          "name"
+         ],
+         "parent": "bestsumorder_class"
+        }
+       ],
+       "parent": "bestsumorder"
+      },
+      {
+       "id": "bestsumorder_order",
+       "name": "bestsumorder_order",
+       "type": "category",
+       "data": [
+        {
+         "scale": "scaleLinear",
+         "id": "bestsumorder_order_cindex",
+         "name": "bestsumorder_order_cindex",
+         "datatype": "integer",
+         "range": [
+          0,
+          1
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_order"
+        },
+        {
+         "scale": "scaleLog",
+         "id": "bestsumorder_order_score",
+         "name": "bestsumorder_order_score",
+         "clamp": 1,
+         "datatype": "float",
+         "range": [
+          0,
+          412422.0
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_order"
+        },
+        {
+         "id": "bestsumorder_order_positions",
+         "name": "bestsumorder_order_positions",
+         "type": "multiarray",
+         "datatype": "string",
+         "preload": false,
+         "active": false,
+         "linked_field": "bestsumorder_positions",
+         "category_slot": 0,
+         "headers": [
+          "name"
+         ],
+         "parent": "bestsumorder_order"
+        }
+       ],
+       "parent": "bestsumorder"
+      },
+      {
+       "id": "bestsumorder_family",
+       "name": "bestsumorder_family",
+       "type": "category",
+       "data": [
+        {
+         "scale": "scaleLinear",
+         "id": "bestsumorder_family_cindex",
+         "name": "bestsumorder_family_cindex",
+         "datatype": "integer",
+         "range": [
+          0,
+          1
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_family"
+        },
+        {
+         "scale": "scaleLog",
+         "id": "bestsumorder_family_score",
+         "name": "bestsumorder_family_score",
+         "clamp": 1,
+         "datatype": "float",
+         "range": [
+          0,
+          412422.0
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_family"
+        },
+        {
+         "id": "bestsumorder_family_positions",
+         "name": "bestsumorder_family_positions",
+         "type": "multiarray",
+         "datatype": "string",
+         "preload": false,
+         "active": false,
+         "linked_field": "bestsumorder_positions",
+         "category_slot": 0,
+         "headers": [
+          "name"
+         ],
+         "parent": "bestsumorder_family"
+        }
+       ],
+       "parent": "bestsumorder"
+      },
+      {
+       "id": "bestsumorder_genus",
+       "name": "bestsumorder_genus",
+       "type": "category",
+       "data": [
+        {
+         "scale": "scaleLinear",
+         "id": "bestsumorder_genus_cindex",
+         "name": "bestsumorder_genus_cindex",
+         "datatype": "integer",
+         "range": [
+          0,
+          1
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_genus"
+        },
+        {
+         "scale": "scaleLog",
+         "id": "bestsumorder_genus_score",
+         "name": "bestsumorder_genus_score",
+         "clamp": 1,
+         "datatype": "float",
+         "range": [
+          0,
+          412422.0
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_genus"
+        },
+        {
+         "id": "bestsumorder_genus_positions",
+         "name": "bestsumorder_genus_positions",
+         "type": "multiarray",
+         "datatype": "string",
+         "preload": false,
+         "active": false,
+         "linked_field": "bestsumorder_positions",
+         "category_slot": 0,
+         "headers": [
+          "name"
+         ],
+         "parent": "bestsumorder_genus"
+        }
+       ],
+       "parent": "bestsumorder"
+      },
+      {
+       "id": "bestsumorder_species",
+       "name": "bestsumorder_species",
+       "type": "category",
+       "data": [
+        {
+         "scale": "scaleLinear",
+         "id": "bestsumorder_species_cindex",
+         "name": "bestsumorder_species_cindex",
+         "datatype": "integer",
+         "range": [
+          0,
+          1
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_species"
+        },
+        {
+         "scale": "scaleLog",
+         "id": "bestsumorder_species_score",
+         "name": "bestsumorder_species_score",
+         "clamp": 1,
+         "datatype": "float",
+         "range": [
+          0,
+          412422.0
+         ],
+         "preload": false,
+         "active": false,
+         "type": "variable",
+         "parent": "bestsumorder_species"
+        },
+        {
+         "id": "bestsumorder_species_positions",
+         "name": "bestsumorder_species_positions",
+         "type": "multiarray",
+         "datatype": "string",
+         "preload": false,
+         "active": false,
+         "linked_field": "bestsumorder_positions",
+         "category_slot": 0,
+         "headers": [
+          "name"
+         ],
+         "parent": "bestsumorder_species"
+        }
+       ],
+       "parent": "bestsumorder"
+      }
+     ],
+     "parent": "taxonomy"
+    }
+   ]
+  }
+ ],
+ "links": {},
+ "name": "fAloSap1",
+ "plot": {
+  "x": "gc",
+  "z": "length",
+  "y": "fAloSap1_pacbio_cov",
+  "cat": "bestsumorder_phylum"
+ },
+ "record_type": "chromosome",
+ "records": 74,
+ "taxon": {},
+ "version": 1,
+ "revision": 0
+}
