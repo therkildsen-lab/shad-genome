@@ -7,6 +7,6 @@
 #3:output name
 #4:input fastq files
 
-minimap2 -ax $1 -t 16 $2 ${@:4} > $3.sam
+minimap2 -ax $1 -t 8 $2 ${@:4} > $3.sam
 
-samtools sort -@16 -O BAM -o $3.bam  $3.sam
+samtools sort -@8 -O BAM -o $3.bam  $3.sam
