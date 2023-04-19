@@ -50,6 +50,10 @@ genome_cov_plot <- cov_binned %>%
   ggplot() +
   geom_point(aes(x = int_start, y = mean_depth),
              size = 0.5) +
+  geom_hline(aes(yintercept = mean_cov),
+             linetype = "dashed",
+             color = "red",
+             size = 1) +
   ylim(c(0, 500)) +
   geom_rect(
     data = no_cov,
@@ -150,14 +154,15 @@ snp_50kb_window <- snps_filtered %>%
             int_start = min(End)) %>%
   mutate(chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even"))
 
-
+# Dashed line is mean genome-wide heterozygosity per kb
 snp_window_plot_50kb <- snp_50kb_window %>%
   ggplot() +
   geom_point(aes(x = int_start, y = snp_per_kb, color = chrom_odd),
              size = 0.5) +
   geom_hline(aes(yintercept = nrow(snps_filtered) / ((nrow(cov_nogaps) - sum(no_cov$End - no_cov$Start)) / 1000)),
              linetype = "dashed",
-             color = "red") +
+             color = "red",
+             size = 1) +
   facet_wrap(
     ~ `Chromosome`,
     ncol = 24,
