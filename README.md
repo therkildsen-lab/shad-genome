@@ -1,5 +1,6 @@
 # shad-genome
 
 This repository contains the scripts used to analyze the American shad (Alosa sapidissima) reference genome assembly fAloSap1.
+<br>
 
-![]("images/American-Shad-Duane-Raver.jpg")
+![](images/American-Shad-Duane-Raver.jpg)
