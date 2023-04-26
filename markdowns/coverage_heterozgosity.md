@@ -48,12 +48,7 @@ cov_binned <- cov_nogaps %>%
   summarize(mean_depth = mean(Depth),
             int_start = min(Position)) %>%
   mutate(chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even"))
-```
 
-    ## `summarise()` has grouped output by 'Chromosome'. You can override using the
-    ## `.groups` argument.
-
-``` r
 genome_cov_plot <- cov_binned %>%
   ggplot() +
   geom_point(aes(x = int_start, y = mean_depth),
@@ -89,16 +84,9 @@ genome_cov_plot <- cov_binned %>%
     strip.background = element_blank(),
     strip.text.x = element_blank()
   )
-```
 
-    ## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
-    ## ℹ Please use `linewidth` instead.
-
-``` r
 genome_cov_plot
 ```
-
-    ## Warning: Removed 21 rows containing missing values (`geom_point()`).
 
 ![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 <br>
@@ -115,12 +103,8 @@ snp_1mb_window <- snps_filtered %>%
   summarize(snp_per_kb = n() / (1e6 / 1e3),
             int_start = min(End)) %>%
   mutate(chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even"))
-```
 
-    ## `summarise()` has grouped output by 'Chromosome'. You can override using the
-    ## `.groups` argument.
 
-``` r
 ## Snps per kb, 1mb windows
 snp_window_plot <- snp_1mb_window %>%
   ggplot() +
@@ -165,12 +149,7 @@ snp_50kb_window <- snps_filtered %>%
   summarize(snp_per_kb = n() / (5e4 / 1e3),
             int_start = min(End)) %>%
   mutate(chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even"))
-```
 
-    ## `summarise()` has grouped output by 'Chromosome'. You can override using the
-    ## `.groups` argument.
-
-``` r
 # Dashed line is mean genome-wide heterozygosity per kb
 snp_window_plot_50kb <- snp_50kb_window %>%
   ggplot() +
@@ -206,11 +185,7 @@ het_cov_plot_50kb <- plot_grid(snp_window_plot_50kb,
                                genome_cov_plot,
                                ncol = 1,
                                align = "v")
-```
 
-    ## Warning: Removed 21 rows containing missing values (`geom_point()`).
-
-``` r
 snp_window_plot_50kb
 ```
 
