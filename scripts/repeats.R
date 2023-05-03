@@ -25,7 +25,7 @@ repeat_plot <- shad_repeats %>% filter(chrom %in% chroms) %>%
     xmin = 0,
     xmax = 1,
     col = NA,
-    fill = "white"
+    fill = "gray90"
   ) +
   geom_rect(
     aes(ymin = start, ymax = end, fill = type),
@@ -41,11 +41,11 @@ repeat_plot <- shad_repeats %>% filter(chrom %in% chroms) %>%
     col = "black" ,
     fill = NA
   ) +
-  scale_fill_viridis(discrete = TRUE, direction = -1) +
+  #scale_fill_viridis(discrete = TRUE, direction = -1) +
   theme_minimal() +
   theme(
         strip.text.y.left = element_text(angle = 0),
-        plot.background = element_rect(fill = "gray80")) +
+        plot.background = element_rect(fill = "white")) +
   coord_flip() +
   facet_wrap( ~ `chrom`, nrow = length(chroms), strip.position = "left")
 
