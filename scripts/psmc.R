@@ -1,5 +1,6 @@
 library(psmcr)
 library(pegas)
+library(tidyverse)
 
 
 setwd("/local/workdir/azwad/shad-genome")
@@ -34,13 +35,17 @@ fAloSap1_psmc <-
     mc.cores = 12
   )
 
+fAloSap1_psmc %>% as.data.frame()
+
+
 plot(
   fAloSap1_psmc,
   col = rgb(red = 0, green = 0, blue = 1, alpha = 0.5),
-  mutation.rate = 1.02e-08,
+  mutation.rate = 2e-09,
   g = 4.5,
   bin.size = 100,
-  xlim = c(0,200000)
+  xlim = c(0,120000)
 )
 
 saveRDS(fAloSap1_psmc, "psmc/output_run_psmc.rds")
+

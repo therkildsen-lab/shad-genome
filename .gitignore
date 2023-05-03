@@ -11,3 +11,4 @@ other_genomes/
 reads/
 .Rproj.user
 *.fq.gz
+repeats/

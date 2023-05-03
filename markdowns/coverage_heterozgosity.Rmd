@@ -213,6 +213,10 @@ het_cov_plot_50kb <- plot_grid(snp_window_plot_50kb,
                                align = "v")
 
 snp_window_plot_50kb
+
+snp_hist_50kb <- snp_50kb_window %>% ggplot() + geom_histogram(aes(x = snp_per_kb), binwidth = 0.1, color = "black", fill = "dodgerblue4") + xlab("Heterozygosity") + ylab("# of Windows")
+
+snp_hist_50kb
 ```
 
 #### Combined coverage and heterozygosity using 50kb windows
