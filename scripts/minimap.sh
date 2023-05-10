@@ -10,3 +10,5 @@
 minimap2 -ax $1 -t 16 -R @RG\\tID:1\\tPL:PACBIO\tLB:LB1\\tSM:fAloSap1 $2 ${@:4} > $3.sam
 
 samtools sort -@16 -O BAM -o $3.bam  $3.sam
+
+rm $3.sam

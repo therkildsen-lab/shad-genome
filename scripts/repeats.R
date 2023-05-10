@@ -1,5 +1,9 @@
 library(tidyverse)
 library(viridis)
+library(reshape)
+library(hrbrthemes)
+library(gridExtra)
+library(ggplot2)
 
 shad_repeats <-
   read_tsv(
@@ -41,7 +45,7 @@ repeat_plot <- shad_repeats %>% filter(chrom %in% chroms) %>%
     col = "black" ,
     fill = NA
   ) +
-  #scale_fill_viridis(discrete = TRUE, direction = -1) +
+  scale_fill_viridis(discrete = TRUE, direction = -1) +
   theme_minimal() +
   theme(
         strip.text.y.left = element_text(angle = 0),
@@ -51,3 +55,27 @@ repeat_plot <- shad_repeats %>% filter(chrom %in% chroms) %>%
 
 
 repeat_plot 
+
+
+
+## Code from Kristina Galagova; See: https://github.com/oushujun/EDTA/issues/92
+
+KimuraDistance <- read.csv("repeats/genome_mask_2/GCF_018492685.fa.distance", sep=" ")
+
+#add here the genome size in bp
+genomes_size=903581644
+
+kd_melt = melt(KimuraDistance,id="Div")
+kd_melt$norm = kd_melt$value/genomes_size * 100
+
+ggplot(kd_melt, aes(fill=variable, y=norm, x=Div)) + 
+  geom_bar(position="stack", stat="identity",color="black") +
+  scale_fill_viridis(discrete = T) +
+  theme_classic() +
+  xlab("Kimura substitution level") +
+  ylab("Percent of the genome") + 
+  labs(fill = "") +
+  coord_cartesian(xlim = c(0, 55)) +
+  theme(axis.text=element_text(size=11),axis.title =element_text(size=12))
+
+

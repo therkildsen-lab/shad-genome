@@ -1,0 +1,115 @@
+---
+title: "Repetitive Regions"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width = 15, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(viridis)
+library(reshape)
+library(hrbrthemes)
+library(gridExtra)
+library(ggplot2)
+
+```
+
+# Annotating Repetitive Regions 
+
+Pacbio HiFi reads used to generate the reference sequence for fAloSap1.pri were mapped back onto the reference genome with [minimap2 2.24](https://github.com/lh3/minimap2) with the `map-hifi` setting and sorted using `samtools sort`. To annotate the repetitive regions in the genome, [RepeatModeler (v2.0.1)](http://www.repeatmasker.org/RepeatModeler/) was used to build a repeat library for the American shad genome employing the [Repbase](https://www.girinst.org/repbase/) database using the latest version 28.04 (04/27/2023). The repeat consensus database was then filtered for known protein sequences with uniref90 (known transposases provided with Repeatmasker were pre-removed from the uniref90 database). The remaining repeat database was then classified with Repbase, and used to generate a repeat annotation gff file using RepeatMasker (Methods adapted from [Stanhope et al. 2022](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9826928/)) and provided by the Cornell BioHPC User Guide for [RepeatModeler](https://biohpc.cornell.edu/lab/userguide.aspx?a=software&i=259#c) and [RepeatMasker](https://biohpc.cornell.edu/lab/userguide.aspx?a=software&i=62#c).
+
+The repeat sequences in the genome assembly was soft masked with RepeatMasker (version 4.1.0), using the repeat library created by combining the Repbase database (latest version 10/26/2018) with de novo TEs identified by RepeatModeler.
+
+#### Summary of repetitive regions in the assembly  
+
+
+
+
+
+#### Genome-wide distribution of repetitive regions
+
+```{r, fig.height=10}
+setwd("/workdir/azwad/shad-genome")
+
+shad_repeats <-
+  read_tsv(
+    "repeats/genome_mask/fAloSap1_repeats.out",
+    col_names = c("chrom", "start", "end", "type")
+  ) %>% mutate(type = gsub("\\/.*","", type), type = ifelse(type == "SINE?", "SINE", type))
+
+chroms <- paste0("chr", c(1:24))
+
+chrom_sizes <-
+  read_tsv("assembly/sizes.genome.ucsc",
+           col_names = c("chrom", "start", "length")) %>%
+  select(c(chrom, length)) %>%
+  filter(chrom %in% chroms) %>%
+  mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom))))
+
+repeat_plot <- shad_repeats %>% filter(chrom %in% chroms) %>%
+  mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
+  ggplot()  +
+  geom_rect(
+    data = chrom_sizes,
+    aes(ymin = 0, ymax = length),
+    xmin = 0,
+    xmax = 1,
+    col = NA,
+    fill = "gray90"
+  ) +
+  geom_rect(
+    aes(ymin = start, ymax = end, fill = type),
+    xmin = 0,
+    xmax = 1,
+    alpha = 1
+  ) +
+  geom_rect(
+    data = chrom_sizes,
+    aes(ymin = 0, ymax = length),
+    xmin = 0,
+    xmax = 1,
+    col = "black" ,
+    fill = NA
+  ) +
+  scale_fill_viridis(discrete = TRUE, direction = -1) +
+  theme_minimal() +
+  theme(
+        strip.text.y.left = element_text(angle = 0),
+        plot.background = element_rect(fill = "white")) +
+  coord_flip() +
+  facet_wrap( ~ `chrom`, nrow = length(chroms), strip.position = "left")
+
+
+repeat_plot 
+
+```  
+<br>  
+
+#### Composition of Repetitive Elements  
+
+```{r, fig.width=20, fig.height=15}
+
+## Code from Kristina Galagova; See: https://github.com/oushujun/EDTA/issues/92
+setwd("/workdir/azwad/shad-genome")
+KimuraDistance <- read.csv("repeats/genome_mask_2/GCF_018492685.fa.distance", sep=" ")
+
+#add here the genome size in bp
+genomes_size=903581644
+
+kd_melt = melt(KimuraDistance,id="Div")
+kd_melt$norm = kd_melt$value/genomes_size * 100
+
+ggplot(kd_melt, aes(fill=variable, y=norm, x=Div)) + 
+  geom_bar(position="stack", stat="identity",color="black") +
+  scale_fill_viridis(discrete = T) +
+  theme_classic() +
+  xlab("Kimura substitution level") +
+  ylab("Percent of the genome") + 
+  labs(fill = "") +
+  coord_cartesian(xlim = c(0, 55)) +
+  theme(axis.text=element_text(size=11),axis.title =element_text(size=12))
+
+```
+
+
+

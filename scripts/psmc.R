@@ -37,6 +37,7 @@ fAloSap1_psmc <-
 
 fAloSap1_psmc %>% as.data.frame()
 
+fAloSap1_psmc <- readRDS("psmc/output_run_psmc.rds")
 
 plot(
   fAloSap1_psmc,
@@ -44,7 +45,7 @@ plot(
   mutation.rate = 2e-09,
   g = 4.5,
   bin.size = 100,
-  xlim = c(0,120000)
+  xlim = c(10000,500000)
 )
 
 saveRDS(fAloSap1_psmc, "psmc/output_run_psmc.rds")
