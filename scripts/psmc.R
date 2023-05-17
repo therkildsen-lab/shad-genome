@@ -41,6 +41,7 @@ saveRDS(fAloSap1_psmc, "psmc/output_run_psmc_gatk.rds")
 
 fAloSap1_psmc_gatk <- readRDS("psmc/output_run_psmc_gatk.rds")
 
+fAloSap1_psmc <- readRDS("psmc/output_run_psmc.rds")
 
 fAloSap1_psmc <- readRDS("psmc/output_run_psmc.rds")
 

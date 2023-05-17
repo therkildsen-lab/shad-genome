@@ -22,10 +22,6 @@ The repeat sequences in the genome assembly was soft masked with RepeatMasker (v
 
 #### Summary of repetitive regions in the assembly  
 
-```{r}
-
-```
-
 
 
 
@@ -74,7 +70,10 @@ repeat_plot <- shad_repeats %>% filter(chrom %in% chroms) %>%
     col = "black" ,
     fill = NA
   ) +
+<<<<<<< HEAD
   ylab("Position") +
+=======
+>>>>>>> c7185563df0082f836d4913b8275ba9856353b6d
   scale_fill_viridis(discrete = TRUE, direction = -1) +
   theme_minimal() +
   theme(
