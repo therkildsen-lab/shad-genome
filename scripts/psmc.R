@@ -8,17 +8,18 @@ setwd("/local/workdir/azwad/shad-genome")
 # Create a diploid consensus sequence from VCF and Ref genome
 fAloSap1_diploid <-
   VCF2DNAbin(
-    "reads/freebayes_results.vcf.gz",
+    "reads/gatk_processed_variants_filtered.vcf.gz",
     refgenome = "assembly/GCF_018492685.1.fa",
     individual = 1,
     quiet = FALSE
   )
 
-saveRDS(fAloSap1_diploid, "psmc/fAloSap1_diploid.rds")
+saveRDS(fAloSap1_diploid, "psmc/fAloSap1_diploid_gatk.rds")
+
+fAloSap1_diploid <- readRDS("psmc/fAloSap1_diploid_gatk.rds")
 
 
-fAloSap1_diploid_binned <-
-  seqBinning(fAloSap1_diploid, bin.size = 100)
+fAloSap1_diploid_binned <- seqBinning(fAloSap1_diploid, bin.size = 100)
 
 fAloSap1_psmc <-
   psmc(
@@ -32,20 +33,24 @@ fAloSap1_psmc <-
     decoding = FALSE,
     quiet = FALSE,
     raw.output = FALSE,
-    mc.cores = 12
+    mc.cores = 16
   )
 
-fAloSap1_psmc %>% as.data.frame()
 
+saveRDS(fAloSap1_psmc, "psmc/output_run_psmc_gatk.rds")
+
+fAloSap1_psmc_gatk <- readRDS("psmc/output_run_psmc_gatk.rds")
+
+
+fAloSap1_psmc <- readRDS("psmc/output_run_psmc.rds")
 
 plot(
-  fAloSap1_psmc,
+  fAloSap1_psmc_gatk,
   col = rgb(red = 0, green = 0, blue = 1, alpha = 0.5),
   mutation.rate = 2e-09,
   g = 4.5,
   bin.size = 100,
-  xlim = c(0,120000)
+  xlim = c(10000, 500000)
 )
 
-saveRDS(fAloSap1_psmc, "psmc/output_run_psmc.rds")
-
+glines(fAloSap1_psmc_gatk, col = "red")

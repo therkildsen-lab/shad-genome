@@ -71,6 +71,7 @@ genome_cov_plot <- cov_binned %>%
   facet_wrap(~ `Chromosome`,
              ncol = length(chroms),
              scales = "free_x") +
+  theme_classic() +
   theme(
     legend.position = "none",
     axis.text.x = element_blank(),
@@ -140,6 +141,14 @@ snp_window_plot
 
 ![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
+``` r
+snp_hist_1mb <- snp_1mb_window %>% ggplot() + geom_histogram(aes(x = snp_per_kb), binwidth = 0.1, color = "black", fill = "dodgerblue4") + xlab("Heterozygosity") + ylab("# of Windows") + theme_classic()
+
+snp_hist_1mb
+```
+
+![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
+
 Using 50kb windows, with genome-wide:
 
 ``` r
@@ -168,6 +177,7 @@ snp_window_plot_50kb <- snp_50kb_window %>%
   ggtitle("Heterozygosity by Chromosome (50kb windows) \n fAloSap1.pri") +
   xlab("") +
   ylab("Heterozygosity per kb") +
+  theme_classic() +
   theme(
     legend.position = "none",
     axis.text.x = element_blank(),
@@ -191,6 +201,14 @@ snp_window_plot_50kb
 
 ![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
+``` r
+snp_hist_50kb <- snp_50kb_window %>% ggplot() + geom_histogram(aes(x = snp_per_kb), binwidth = 0.1, color = "black", fill = "dodgerblue4") + xlab("Heterozygosity") + ylab("# of Windows") + theme_classic()
+
+snp_hist_50kb
+```
+
+![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+
 #### Combined coverage and heterozygosity using 50kb windows
 
 ``` r
@@ -198,3 +216,68 @@ het_cov_plot_50kb
 ```
 
 ![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+#### Runs of Homozygosity (ROH)
+
+ROH identified using the PLINK 1.9 `--homozyg` function using default
+parameters except for `--homozyg-kb` set to `100` to allow for detection
+of ROH \> 100kb in length.
+
+``` r
+setwd("/workdir/azwad/shad-genome")
+
+library(viridis)
+
+shad_roh <-
+  read_table(
+    "reads/plink.hom"
+  ) %>% mutate(CHR = paste0("chr",CHR))
+
+chroms <- paste0("chr", c(1:24))
+
+chrom_sizes <-
+  read_tsv("assembly/sizes.genome.ucsc",
+           col_names = c("CHR", "start", "length")) %>%
+  select(c(CHR, length)) %>%
+  filter(CHR %in% chroms) %>%
+  mutate(CHR = as.integer(str_sub(CHR, 4, str_length(CHR))))
+
+roh_plot <- shad_roh %>% filter(CHR %in% chroms) %>%
+  mutate(CHR = as.integer(str_sub(CHR, 4, str_length(CHR)))) %>%
+  ggplot()  +
+  geom_rect(
+    data = chrom_sizes,
+    aes(ymin = 0, ymax = length),
+    xmin = 0,
+    xmax = 1,
+    col = NA,
+    fill = "gray90"
+  ) +
+  geom_rect(
+    aes(ymin = POS1, ymax = POS2, fill = KB),
+    xmin = 0,
+    xmax = 1,
+    alpha = 1
+  ) +
+  geom_rect(
+    data = chrom_sizes,
+    aes(ymin = 0, ymax = length),
+    xmin = 0,
+    xmax = 1,
+    col = "black" ,
+    fill = NA
+  ) +
+  ylab("Position") +
+  scale_fill_viridis() +
+  theme_minimal() +
+  theme(
+        strip.text.y.left = element_text(angle = 0),
+        plot.background = element_rect(fill = "white")) +
+  coord_flip() +
+  facet_wrap(~CHR, nrow = length(chrom_sizes$CHR), strip.position = "left") + ggtitle("Runs of Homozygosity (ROH)")
+
+
+roh_plot
+```
+
+![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->

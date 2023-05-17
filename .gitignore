@@ -12,3 +12,4 @@ reads/
 .Rproj.user
 *.fq.gz
 repeats/
+psmc/
