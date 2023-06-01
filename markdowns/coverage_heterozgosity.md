@@ -7,10 +7,15 @@ Pacbio HiFi reads used to generate the reference sequence for
 fAloSap1.pri were mapped back onto the reference genome with [minimap2
 2.24](https://github.com/lh3/minimap2) with the `map-hifi` setting and
 sorted using `samtools sort`. To investigate the degree of
-heterozygosity present in the genome, [freebayes
-1.3.5](https://github.com/freebayes/freebayes) was used to call variants
-using default settings. The resulting VCF was filtered using `vcffilter`
-to keep variants with a `QUAL` score \> 20.
+heterozygosity present in the genome, we used [GATK
+3.8.1](https://gatk.broadinstitute.org/hc/en-us) to perform local
+realignment around indels (IndelRealigner) and for genotype calling
+using HaplotypeCaller followed by GenotypeGVCFs. All sites including
+both variants and invariant sites were called using the
+`-ERC BP_RESOLUTION` and `-out_mode EMIT_ALL_SITES` parameters on, in
+HaplotypeCaller. The parameters `-allSites` and `-stand_call_conf 0`
+were on, in GenotypeGVCFs. We filtered out sites with excessively low or
+high read depth (1/3X and 2X the genome-wide average, respectively).
 
 ## Coverage
 
@@ -21,37 +26,26 @@ Mean coverage across the genome:
 mean_cov %>% kable
 ```
 
-|        x |
-|---------:|
-| 41.32937 |
+|       x |
+|--------:|
+| 36.4284 |
 
 <br>
 
 #### Genome-wide coverage:
 
 Mean coverage per 50kb intervals across the genome, with mean
-genome-wide coverage denoted by a red dashed line. Regions with zero
-coverage are marked in red:
+genome-wide coverage denoted by a red dashed line.
 
 ``` r
-chrom_size <-
-  cov %>%
-  group_by(Chromosome) %>%
-  summarize(chrom_length = max(End)) %>%
-  select(Chromosome, chrom_length)
+chrom_size <- read_tsv("../assembly/sizes.genome.ucsc", col_names = c("Chromosome", "Start", "End"))
+no_cov <- cov_50kb %>% filter(mean_depth < 5)
 
-no_cov <- cov %>% filter(Depth == 0)
+  
 
-cov_binned <- cov_nogaps %>%
-  mutate(ints = cut_width(Position, width = 5e4, boundary = 0)) %>%
-  group_by(Chromosome, ints) %>%
-  summarize(mean_depth = mean(Depth),
-            int_start = min(Position)) %>%
-  mutate(chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even"))
-
-genome_cov_plot <- cov_binned %>%
+genome_cov_plot <- cov_50kb %>%
   ggplot() +
-  geom_point(aes(x = int_start, y = mean_depth),
+  geom_point(aes(x = Start, y = mean_depth),
              size = 0.5) +
   geom_hline(aes(yintercept = mean_cov),
              linetype = "dashed",
@@ -59,15 +53,7 @@ genome_cov_plot <- cov_binned %>%
              size = 1) +
   xlab("Position") +
   ylab("Mean Coverage per 50 kb") +
-  ylim(c(0, 500)) +
-  geom_rect(
-    data = no_cov,
-    aes(xmin = Start, xmax = End),
-    ymin = 0,
-    ymax = 1000,
-    fill = "red",
-    alpha = 1
-  ) +
+  ylim(c(0, 400)) +
   facet_wrap(~ `Chromosome`,
              ncol = length(chroms),
              scales = "free_x") +
@@ -97,20 +83,16 @@ genome_cov_plot
 Using 1mb windows:
 
 ``` r
-# Break SNPs into 1mb windows
-snp_1mb_window <- snps_filtered %>%
-  mutate(ints = cut_width(End, width = 1e6, boundary = 0)) %>%
-  group_by(Chromosome, ints) %>%
-  summarize(snp_per_kb = n() / (1e6 / 1e3),
-            int_start = min(End)) %>%
-  mutate(chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even"))
+# Filter out windows with < 50% genotyping rate
+
+snp_gt_1mb_window_filtered <- snp_gt_1mb_window %>% filter(genotype_rate >= 0.5) 
 
 
 ## Snps per kb, 1mb windows
-snp_window_plot <- snp_1mb_window %>%
+snp_1mb_window_plot <- snp_gt_1mb_window_filtered %>%
   ggplot() +
   geom_col(
-    aes(x = int_start, y = snp_per_kb, fill = chrom_odd),
+    aes(x = int_start, y = snp_kb, fill = chrom_odd),
     position = "jitter",
     width = 1000000
   ) +
@@ -136,35 +118,32 @@ snp_window_plot <- snp_1mb_window %>%
   ) +
   scale_fill_manual(values = c("dodgerblue4", "cornflowerblue"))
 
-snp_window_plot
+snp_1mb_window_plot
 ```
 
 ![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
-snp_hist_1mb <- snp_1mb_window %>% ggplot() + geom_histogram(aes(x = snp_per_kb), binwidth = 0.1, color = "black", fill = "dodgerblue4") + xlab("Heterozygosity") + ylab("# of Windows") + theme_classic()
+snp_hist_1mb <- snp_gt_1mb_window %>% ggplot() + geom_histogram(aes(x = snp_kb), binwidth = 0.1, color = "black", fill = "dodgerblue4") + xlab("Heterozygosity") + ylab("# of Windows") + theme_classic()
 
 snp_hist_1mb
 ```
 
 ![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
 
-Using 50kb windows, with genome-wide:
+Using 50kb windows:
 
 ``` r
-snp_50kb_window <- snps_filtered %>%
-  mutate(ints = cut_width(End, width = 5e4, boundary = 0)) %>%
-  group_by(Chromosome, ints) %>%
-  summarize(snp_per_kb = n() / (5e4 / 1e3),
-            int_start = min(End)) %>%
-  mutate(chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even"))
+snp_gt_50kb_window_filtered <- snp_gt_50kb_window %>% filter(genotype_rate >= 0.5) 
+
+snp_kb_50kb <- snp_gt_50kb_window_filtered %>% pull(snp_kb)
 
 # Dashed line is mean genome-wide heterozygosity per kb
-snp_window_plot_50kb <- snp_50kb_window %>%
+snp_window_plot_50kb <- snp_gt_50kb_window_filtered %>%
   ggplot() +
-  geom_point(aes(x = int_start, y = snp_per_kb, color = chrom_odd),
+  geom_point(aes(x = int_start, y = snp_kb, color = chrom_odd),
              size = 0.5) +
-  geom_hline(aes(yintercept = nrow(snps_filtered) / ((nrow(cov_nogaps) - sum(no_cov$End - no_cov$Start)) / 1000)),
+  geom_hline(aes(yintercept = mean(snp_kb)),
              linetype = "dashed",
              color = "red",
              size = 1) +
@@ -202,7 +181,7 @@ snp_window_plot_50kb
 ![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ``` r
-snp_hist_50kb <- snp_50kb_window %>% ggplot() + geom_histogram(aes(x = snp_per_kb), binwidth = 0.1, color = "black", fill = "dodgerblue4") + xlab("Heterozygosity") + ylab("# of Windows") + theme_classic()
+snp_hist_50kb <- snp_gt_50kb_window_filtered %>% ggplot() + geom_histogram(aes(x = snp_kb), binwidth = 0.1, color = "black", fill = "dodgerblue4") + xlab("Heterozygosity") + ylab("# of Windows") + theme_classic()
 
 snp_hist_50kb
 ```
