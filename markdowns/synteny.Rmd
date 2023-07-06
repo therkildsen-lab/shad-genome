@@ -128,7 +128,7 @@ medaka <- synteny_tab_filtered %>% filter(length > 200) %>% select(medaka_chr, m
 
 ```{r}
 circos.clear()
-col_text <- "grey40"
+col_text <- "white"
 circos.par("track.height"=0.8, gap.degree=0.5, cell.padding=c(0, 0, 0, 0))
 circos.initialize(factors=combined_ref$X1, xlim=matrix(c(rep(0, 48), combined_ref$X3), ncol=2))
 
@@ -139,23 +139,23 @@ xlim=CELL_META$xlim
 ylim=CELL_META$ylim
 circos.text(mean(xlim), mean(ylim), gsub(".*chr", "",chr), cex=1, col=col_text,
 facing="bending.inside", niceFacing=TRUE)
-}, bg.col="white", bg.border=F, track.height=0.12)
+}, bg.col=c(rep("gray70", 24), rep("cornflowerblue", 24)), bg.border=F, track.height=0.12)
 
 
 brk <- c(0, 10, 20, 30, 40, 50, 60)*10^6
 circos.track(track.index = get.current.track.index(), panel.fun=function(x, y) {
-circos.axis(h="bottom", major.at=brk, labels=round(brk/10^7, 1), labels.cex=0.5, 
-col=col_text, labels.col=col_text, lwd=1, labels.facing="clockwise")
+circos.axis(h="top", major.at=brk, labels=round(brk/10^7, 1), labels.cex=0.5, 
+col="grey30", labels.col="grey30", lwd=1, labels.facing="clockwise")
 }, bg.border=F)
 
-circos.track(
-    ylim = c(0,10),
-    cell.padding = c(0, 0, 0, 0),
-    track.height = mm_h(1),
-    bg.lwd= 30,
-    bg.col = c(rep("gray80", 24), rep("cornflowerblue", 24)),
-    bg.border = F
-)
+# circos.track(
+#     ylim = c(0,10),
+#     cell.padding = c(0, 0, 0, 0),
+#     track.height = mm_h(1),
+#     bg.lwd= 30,
+#     bg.col = c(rep("gray80", 24), rep("cornflowerblue", 24)),
+#     bg.border = F
+# )
 
 circos.genomicLink(medaka,shad, col= turbo(n = nrow(medaka), alpha = 0.02))
 
