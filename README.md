@@ -12,5 +12,5 @@ This repository contains the scripts used to analyze the American shad (Alosa sa
 * [**Genome-wide Coverage and Heterozygosity**](https://github.com/therkildsen-lab/shad-genome/blob/main/markdowns/coverage_heterozgosity.md)  
 * **PSMC**  
 * [**Repetitive Regions**](https://github.com/therkildsen-lab/shad-genome/blob/main/markdowns/repetitive_regions.md)
-* **Circos Plot**
+* [**Circos Plot**](https://github.com/therkildsen-lab/shad-genome/blob/main/markdowns/synteny.md)
 
