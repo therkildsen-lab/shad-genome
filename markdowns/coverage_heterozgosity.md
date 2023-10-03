@@ -136,6 +136,14 @@ Using 50kb windows:
 ``` r
 snp_gt_50kb_window_filtered <- snp_gt_50kb_window %>% filter(genotype_rate >= 0.5) 
 
+mean_het <- snp_gt_50kb_window_filtered %>% pull(snp_kb) %>% mean()
+
+sd_het <- snp_gt_50kb_window_filtered %>% pull(snp_kb) %>% sd()
+
+t_test_het <- snp_gt_50kb_window_filtered %>% pull(snp_kb) %>% t.test()
+
+conf_int_het <- t_test_het$conf.int
+
 snp_kb_50kb <- snp_gt_50kb_window_filtered %>% pull(snp_kb)
 
 # Dashed line is mean genome-wide heterozygosity per kb

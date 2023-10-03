@@ -49,9 +49,9 @@ plot(
   fAloSap1_psmc_gatk,
   col = rgb(red = 0, green = 0, blue = 1, alpha = 0.5),
   mutation.rate = 2e-09,
-  g = 4.5,
+  g = 3,
   bin.size = 100,
-  xlim = c(10000, 500000)
+  xlim = c(0,100000)
 )
 
 glines(fAloSap1_psmc_gatk, col = "red")
