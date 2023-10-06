@@ -23,7 +23,7 @@ high read depth (1/3X and 2X the genome-wide average, respectively).
 Mean coverage across the genome:
 
 ``` r
-mean_cov %>% kable
+mean_cov %>% kable()
 ```
 
 |       x |
@@ -41,22 +41,25 @@ genome-wide coverage denoted by a red dashed line.
 chrom_size <- read_tsv("../assembly/sizes.genome.ucsc", col_names = c("Chromosome", "Start", "End"))
 no_cov <- cov_50kb %>% filter(mean_depth < 5)
 
-  
+
 
 genome_cov_plot <- cov_50kb %>%
   ggplot() +
   geom_point(aes(x = Start, y = mean_depth),
-             size = 0.5) +
+    size = 0.5
+  ) +
   geom_hline(aes(yintercept = mean_cov),
-             linetype = "dashed",
-             color = "red",
-             size = 1) +
+    linetype = "dashed",
+    color = "red",
+    size = 1
+  ) +
   xlab("Position") +
   ylab("Mean Coverage per 50 kb") +
   ylim(c(0, 400)) +
-  facet_wrap(~ `Chromosome`,
-             ncol = length(chroms),
-             scales = "free_x") +
+  facet_wrap(~`Chromosome`,
+    ncol = length(chroms),
+    scales = "free_x"
+  ) +
   theme_classic() +
   theme(
     legend.position = "none",
@@ -85,7 +88,7 @@ Using 1mb windows:
 ``` r
 # Filter out windows with < 50% genotyping rate
 
-snp_gt_1mb_window_filtered <- snp_gt_1mb_window %>% filter(genotype_rate >= 0.5) 
+snp_gt_1mb_window_filtered <- snp_gt_1mb_window %>% filter(genotype_rate >= 0.5)
 
 
 ## Snps per kb, 1mb windows
@@ -97,7 +100,7 @@ snp_1mb_window_plot <- snp_gt_1mb_window_filtered %>%
     width = 1000000
   ) +
   facet_wrap(
-    ~ `Chromosome`,
+    ~`Chromosome`,
     ncol = 24,
     strip.position = "top",
     scales = "free_x"
@@ -124,7 +127,15 @@ snp_1mb_window_plot
 ![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
-snp_hist_1mb <- snp_gt_1mb_window %>% ggplot() + geom_histogram(aes(x = snp_kb), binwidth = 0.1, color = "black", fill = "dodgerblue4") + xlab("Heterozygosity") + ylab("# of Windows") + theme_classic()
+snp_hist_1mb <- snp_gt_1mb_window %>% ggplot() +
+  geom_histogram(aes(x = snp_kb),
+    binwidth = 0.1,
+    color = "black",
+    fill = "dodgerblue4"
+  ) +
+  xlab("Heterozygosity") +
+  ylab("# of Windows") +
+  theme_classic()
 
 snp_hist_1mb
 ```
@@ -134,29 +145,39 @@ snp_hist_1mb
 Using 50kb windows:
 
 ``` r
-snp_gt_50kb_window_filtered <- snp_gt_50kb_window %>% filter(genotype_rate >= 0.5) 
+snp_gt_50kb_window_filtered <- snp_gt_50kb_window %>%
+  filter(genotype_rate >= 0.5)
 
-mean_het <- snp_gt_50kb_window_filtered %>% pull(snp_kb) %>% mean()
+mean_het <- snp_gt_50kb_window_filtered %>%
+  pull(snp_kb) %>%
+  mean()
 
-sd_het <- snp_gt_50kb_window_filtered %>% pull(snp_kb) %>% sd()
+sd_het <- snp_gt_50kb_window_filtered %>%
+  pull(snp_kb) %>%
+  sd()
 
-t_test_het <- snp_gt_50kb_window_filtered %>% pull(snp_kb) %>% t.test()
+t_test_het <- snp_gt_50kb_window_filtered %>%
+  pull(snp_kb) %>%
+  t.test()
 
 conf_int_het <- t_test_het$conf.int
 
-snp_kb_50kb <- snp_gt_50kb_window_filtered %>% pull(snp_kb)
+snp_kb_50kb <- snp_gt_50kb_window_filtered %>%
+  pull(snp_kb)
 
 # Dashed line is mean genome-wide heterozygosity per kb
 snp_window_plot_50kb <- snp_gt_50kb_window_filtered %>%
   ggplot() +
   geom_point(aes(x = int_start, y = snp_kb, color = chrom_odd),
-             size = 0.5) +
+    size = 0.5
+  ) +
   geom_hline(aes(yintercept = mean(snp_kb)),
-             linetype = "dashed",
-             color = "red",
-             size = 1) +
+    linetype = "dashed",
+    color = "red",
+    size = 1
+  ) +
   facet_wrap(
-    ~ `Chromosome`,
+    ~`Chromosome`,
     ncol = 24,
     strip.position = "top",
     scales = "free_x"
@@ -179,9 +200,10 @@ snp_window_plot_50kb <- snp_gt_50kb_window_filtered %>%
   scale_color_manual(values = c("dodgerblue4", "cornflowerblue"))
 
 het_cov_plot_50kb <- plot_grid(snp_window_plot_50kb,
-                               genome_cov_plot,
-                               ncol = 1,
-                               align = "v")
+  genome_cov_plot,
+  ncol = 1,
+  align = "v"
+)
 
 snp_window_plot_50kb
 ```
@@ -189,7 +211,17 @@ snp_window_plot_50kb
 ![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ``` r
-snp_hist_50kb <- snp_gt_50kb_window_filtered %>% ggplot() + geom_histogram(aes(x = snp_kb), binwidth = 0.1, color = "black", fill = "dodgerblue4") + xlab("Heterozygosity") + ylab("# of Windows") + theme_classic()
+snp_hist_50kb <- snp_gt_50kb_window_filtered %>%
+  ggplot() +
+  geom_histogram(
+    aes(x = snp_kb),
+    binwidth = 0.1,
+    color = "black",
+    fill = "dodgerblue4"
+  ) +
+  xlab("Heterozygosity") +
+  ylab("# of Windows") +
+  theme_classic()
 
 snp_hist_50kb
 ```
@@ -218,20 +250,22 @@ library(viridis)
 shad_roh <-
   read_table(
     "reads/plink.hom"
-  ) %>% mutate(CHR = paste0("chr",CHR))
+  ) %>% mutate(CHR = paste0("chr", CHR))
 
 chroms <- paste0("chr", c(1:24))
 
 chrom_sizes <-
   read_tsv("assembly/sizes.genome.ucsc",
-           col_names = c("CHR", "start", "length")) %>%
+    col_names = c("CHR", "start", "length")
+  ) %>%
   select(c(CHR, length)) %>%
   filter(CHR %in% chroms) %>%
   mutate(CHR = as.integer(str_sub(CHR, 4, str_length(CHR))))
 
-roh_plot <- shad_roh %>% filter(CHR %in% chroms) %>%
+roh_plot <- shad_roh %>%
+  filter(CHR %in% chroms) %>%
   mutate(CHR = as.integer(str_sub(CHR, 4, str_length(CHR)))) %>%
-  ggplot()  +
+  ggplot() +
   geom_rect(
     data = chrom_sizes,
     aes(ymin = 0, ymax = length),
@@ -251,17 +285,19 @@ roh_plot <- shad_roh %>% filter(CHR %in% chroms) %>%
     aes(ymin = 0, ymax = length),
     xmin = 0,
     xmax = 1,
-    col = "black" ,
+    col = "black",
     fill = NA
   ) +
   ylab("Position") +
   scale_fill_viridis() +
   theme_minimal() +
   theme(
-        strip.text.y.left = element_text(angle = 0),
-        plot.background = element_rect(fill = "white")) +
+    strip.text.y.left = element_text(angle = 0),
+    plot.background = element_rect(fill = "white")
+  ) +
   coord_flip() +
-  facet_wrap(~CHR, nrow = length(chrom_sizes$CHR), strip.position = "left") + ggtitle("Runs of Homozygosity (ROH)")
+  facet_wrap(~CHR, nrow = length(chrom_sizes$CHR), strip.position = "left") +
+  ggtitle("Runs of Homozygosity (ROH)")
 
 
 roh_plot

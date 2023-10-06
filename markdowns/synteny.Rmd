@@ -122,6 +122,10 @@ shad <- synteny_tab_filtered %>% filter(length > 200) %>%  select(shad_chr, shad
 medaka <- synteny_tab_filtered %>% filter(length > 200) %>% select(medaka_chr, medaka_start, medaka_end)
 
 
+shad_col <-  shad %>% select(shad_chr) %>% unique() %>% arrange(as.integer(substr(shad_chr,4,6)))
+shad_col$col <- turbo(n=24. , alpha = 0.02)
+
+shad <- left_join(shad, shad_col)
 
 ```
 
@@ -157,7 +161,7 @@ col="grey30", labels.col="grey30", lwd=1, labels.facing="clockwise")
 #     bg.border = F
 # )
 
-circos.genomicLink(medaka,shad, col= turbo(n = nrow(medaka), alpha = 0.02))
+circos.genomicLink(shad,medaka, col= rev(shad$col))
 
 ```
 

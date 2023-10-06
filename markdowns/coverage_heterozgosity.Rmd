@@ -8,7 +8,11 @@ knitr::opts_chunk$set(echo = TRUE, fig.width = 15, warning = FALSE, message = FA
 library(tidyverse)
 library(cowplot)
 library(knitr)
+setwd("/local/workdir/azwad/shad-genome/markdowns")
 ```
+
+
+
 
 # Genome-wide Coverage and Heterozygosity  
 
@@ -20,19 +24,16 @@ Pacbio HiFi reads used to generate the reference sequence for fAloSap1.pri were 
 # Load in all the data
 
 # Load in list of SNPs with depth
-#snps <- read_tsv("../reads/fAloSap1_minimap_snps.ucsc.bed", col_names = c("Chromosome", "Position0", "End", "Depth", "GT"))
+# snps <- read_tsv("../reads/fAloSap1_minimap_snps.ucsc.bed", col_names = c("Chromosome", "Position0", "End", "Depth", "GT"))
 
-#saveRDS(snps, file = "../reads/fAloSap1_snps.rds")
+# saveRDS(snps, file = "../reads/fAloSap1_snps.rds")
 chroms <- paste0("chr", c(1:24))
 
 # snps <- readRDS("../reads/fAloSap1_snps.rds")
-# 
+#
 # snps <- snps %>% mutate(type = ifelse(GT == "0/1" | GT == "1/1", "snp", "ref"))
-# 
+#
 # snps_filtered <- snps %>% filter(Chromosome %in% chroms) %>% mutate(Chromosome = as.integer(str_sub(Chromosome, 4, str_length(Chromosome))))
-
-
-  
 
 # Break SNPs into 1mb windows
 # gt_1mb_window <- snps_filtered %>%
@@ -41,14 +42,14 @@ chroms <- paste0("chr", c(1:24))
 #   summarize(int_start = min(End),
 #             genotype_rate = n()/1e6) %>%
 #   mutate(chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even"))
-# 
-# snp_1mb_window <- snps_filtered %>%  
+#
+# snp_1mb_window <- snps_filtered %>%
 #   mutate(ints = cut_width(End, width = 1e6, boundary = 0)) %>%
-#   group_by(Chromosome, ints, type) %>% 
-#   count() %>% pivot_wider(values_from = n, names_from = type)  %>% 
+#   group_by(Chromosome, ints, type) %>%
+#   count() %>% pivot_wider(values_from = n, names_from = type)  %>%
 #   mutate(snp = ifelse(is.na(snp) == T, 0, snp))
-# 
-# snp_gt_1mb_window <- left_join(gt_1mb_window, snp_1mb_window) %>% 
+#
+# snp_gt_1mb_window <- left_join(gt_1mb_window, snp_1mb_window) %>%
 #   mutate(snp_kb = snp / (1e6/1e3))
 
 # saveRDS(snp_gt_1mb_window, file = "../reads/snp_gt_1mb_window.rds")
@@ -62,16 +63,16 @@ snp_gt_1mb_window <- readRDS("../reads/snp_gt_1mb_window.rds")
 #   summarize(int_start = min(End),
 #             genotype_rate = n() / 5e4) %>%
 #   mutate(chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even"))
-# 
-# snp_50kb_window <- snps_filtered %>%  
+#
+# snp_50kb_window <- snps_filtered %>%
 #   mutate(ints = cut_width(End, width = 5e4, boundary = 0)) %>%
-#   group_by(Chromosome, ints, type) %>% 
-#   count() %>% pivot_wider(values_from = n, names_from = type) %>% 
+#   group_by(Chromosome, ints, type) %>%
+#   count() %>% pivot_wider(values_from = n, names_from = type) %>%
 #   mutate(snp = ifelse(is.na(snp) == T, 0, snp))
-# 
+#
 # snp_gt_50kb_window <- left_join(gt_50kb_window, snp_50kb_window) %>%
 #   mutate(snp_kb = snp / (5e4/1e3))
-# 
+#
 # saveRDS(snp_gt_50kb_window, file = "../reads/snp_gt_50kb_window.rds")
 
 snp_gt_50kb_window <- readRDS("../reads/snp_gt_50kb_window.rds")
@@ -79,21 +80,21 @@ snp_gt_50kb_window <- readRDS("../reads/snp_gt_50kb_window.rds")
 # Read depth per 50kb intervals
 cov_50kb <- read_table(
   "../reads/fAloSap1_minimap_depth_50kb.ucsc.bed",
-  col_names = c("Chromosome", "Start","End", "sum_depth", "mean_depth")
+  col_names = c("Chromosome", "Start", "End", "sum_depth", "mean_depth")
 ) %>%
   filter(Chromosome %in% chroms) %>%
-  mutate(Chromosome = as.integer(str_sub(Chromosome, 4, str_length(Chromosome)))) %>% 
+  mutate(Chromosome = as.integer(str_sub(Chromosome, 4, str_length(Chromosome)))) %>%
   mutate(chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even"))
 
 # Calculate mean coverage
-mean_cov  <- cov_50kb %>%
-  pull(mean_depth) %>% mean()
-
+mean_cov <- cov_50kb %>%
+  pull(mean_depth) %>%
+  mean()
 ```
 <br>  
 Mean coverage across the genome:
 ```{r}
-mean_cov %>% kable
+mean_cov %>% kable()
 ```
 <br>  
 
@@ -103,22 +104,25 @@ Mean coverage per 50kb intervals across the genome, with mean genome-wide covera
 chrom_size <- read_tsv("../assembly/sizes.genome.ucsc", col_names = c("Chromosome", "Start", "End"))
 no_cov <- cov_50kb %>% filter(mean_depth < 5)
 
-  
+
 
 genome_cov_plot <- cov_50kb %>%
   ggplot() +
   geom_point(aes(x = Start, y = mean_depth),
-             size = 0.5) +
+    size = 0.5
+  ) +
   geom_hline(aes(yintercept = mean_cov),
-             linetype = "dashed",
-             color = "red",
-             size = 1) +
+    linetype = "dashed",
+    color = "red",
+    size = 1
+  ) +
   xlab("Position") +
   ylab("Mean Coverage per 50 kb") +
   ylim(c(0, 400)) +
-  facet_wrap(~ `Chromosome`,
-             ncol = length(chroms),
-             scales = "free_x") +
+  facet_wrap(~`Chromosome`,
+    ncol = length(chroms),
+    scales = "free_x"
+  ) +
   theme_classic() +
   theme(
     legend.position = "none",
@@ -142,10 +146,9 @@ genome_cov_plot
 
 Using 1mb windows:
 ```{r}
-
 # Filter out windows with < 50% genotyping rate
 
-snp_gt_1mb_window_filtered <- snp_gt_1mb_window %>% filter(genotype_rate >= 0.5) 
+snp_gt_1mb_window_filtered <- snp_gt_1mb_window %>% filter(genotype_rate >= 0.5)
 
 
 ## Snps per kb, 1mb windows
@@ -157,7 +160,7 @@ snp_1mb_window_plot <- snp_gt_1mb_window_filtered %>%
     width = 1000000
   ) +
   facet_wrap(
-    ~ `Chromosome`,
+    ~`Chromosome`,
     ncol = 24,
     strip.position = "top",
     scales = "free_x"
@@ -181,7 +184,15 @@ snp_1mb_window_plot <- snp_gt_1mb_window_filtered %>%
 snp_1mb_window_plot
 
 
-snp_hist_1mb <- snp_gt_1mb_window %>% ggplot() + geom_histogram(aes(x = snp_kb), binwidth = 0.1, color = "black", fill = "dodgerblue4") + xlab("Heterozygosity") + ylab("# of Windows") + theme_classic()
+snp_hist_1mb <- snp_gt_1mb_window %>% ggplot() +
+  geom_histogram(aes(x = snp_kb),
+    binwidth = 0.1,
+    color = "black",
+    fill = "dodgerblue4"
+  ) +
+  xlab("Heterozygosity") +
+  ylab("# of Windows") +
+  theme_classic()
 
 snp_hist_1mb
 ```
@@ -189,29 +200,39 @@ snp_hist_1mb
 Using 50kb windows:
 
 ```{r}
-snp_gt_50kb_window_filtered <- snp_gt_50kb_window %>% filter(genotype_rate >= 0.5) 
+snp_gt_50kb_window_filtered <- snp_gt_50kb_window %>%
+  filter(genotype_rate >= 0.5)
 
-mean_het <- snp_gt_50kb_window_filtered %>% pull(snp_kb) %>% mean()
+mean_het <- snp_gt_50kb_window_filtered %>%
+  pull(snp_kb) %>%
+  mean()
 
-sd_het <- snp_gt_50kb_window_filtered %>% pull(snp_kb) %>% sd()
+sd_het <- snp_gt_50kb_window_filtered %>%
+  pull(snp_kb) %>%
+  sd()
 
-t_test_het <- snp_gt_50kb_window_filtered %>% pull(snp_kb) %>% t.test()
+t_test_het <- snp_gt_50kb_window_filtered %>%
+  pull(snp_kb) %>%
+  t.test()
 
 conf_int_het <- t_test_het$conf.int
 
-snp_kb_50kb <- snp_gt_50kb_window_filtered %>% pull(snp_kb)
+snp_kb_50kb <- snp_gt_50kb_window_filtered %>%
+  pull(snp_kb)
 
 # Dashed line is mean genome-wide heterozygosity per kb
 snp_window_plot_50kb <- snp_gt_50kb_window_filtered %>%
   ggplot() +
   geom_point(aes(x = int_start, y = snp_kb, color = chrom_odd),
-             size = 0.5) +
+    size = 0.5
+  ) +
   geom_hline(aes(yintercept = mean(snp_kb)),
-             linetype = "dashed",
-             color = "red",
-             size = 1) +
+    linetype = "dashed",
+    color = "red",
+    size = 1
+  ) +
   facet_wrap(
-    ~ `Chromosome`,
+    ~`Chromosome`,
     ncol = 24,
     strip.position = "top",
     scales = "free_x"
@@ -234,17 +255,26 @@ snp_window_plot_50kb <- snp_gt_50kb_window_filtered %>%
   scale_color_manual(values = c("dodgerblue4", "cornflowerblue"))
 
 het_cov_plot_50kb <- plot_grid(snp_window_plot_50kb,
-                               genome_cov_plot,
-                               ncol = 1,
-                               align = "v")
+  genome_cov_plot,
+  ncol = 1,
+  align = "v"
+)
 
 snp_window_plot_50kb
 
-snp_hist_50kb <- snp_gt_50kb_window_filtered %>% ggplot() + geom_histogram(aes(x = snp_kb), binwidth = 0.1, color = "black", fill = "dodgerblue4") + xlab("Heterozygosity") + ylab("# of Windows") + theme_classic()
+snp_hist_50kb <- snp_gt_50kb_window_filtered %>%
+  ggplot() +
+  geom_histogram(
+    aes(x = snp_kb),
+    binwidth = 0.1,
+    color = "black",
+    fill = "dodgerblue4"
+  ) +
+  xlab("Heterozygosity") +
+  ylab("# of Windows") +
+  theme_classic()
 
 snp_hist_50kb
-
-
 ```
 
 #### Combined coverage and heterozygosity using 50kb windows
@@ -265,20 +295,22 @@ library(viridis)
 shad_roh <-
   read_table(
     "reads/plink.hom"
-  ) %>% mutate(CHR = paste0("chr",CHR))
+  ) %>% mutate(CHR = paste0("chr", CHR))
 
 chroms <- paste0("chr", c(1:24))
 
 chrom_sizes <-
   read_tsv("assembly/sizes.genome.ucsc",
-           col_names = c("CHR", "start", "length")) %>%
+    col_names = c("CHR", "start", "length")
+  ) %>%
   select(c(CHR, length)) %>%
   filter(CHR %in% chroms) %>%
   mutate(CHR = as.integer(str_sub(CHR, 4, str_length(CHR))))
 
-roh_plot <- shad_roh %>% filter(CHR %in% chroms) %>%
+roh_plot <- shad_roh %>%
+  filter(CHR %in% chroms) %>%
   mutate(CHR = as.integer(str_sub(CHR, 4, str_length(CHR)))) %>%
-  ggplot()  +
+  ggplot() +
   geom_rect(
     data = chrom_sizes,
     aes(ymin = 0, ymax = length),
@@ -298,17 +330,19 @@ roh_plot <- shad_roh %>% filter(CHR %in% chroms) %>%
     aes(ymin = 0, ymax = length),
     xmin = 0,
     xmax = 1,
-    col = "black" ,
+    col = "black",
     fill = NA
   ) +
   ylab("Position") +
   scale_fill_viridis() +
   theme_minimal() +
   theme(
-        strip.text.y.left = element_text(angle = 0),
-        plot.background = element_rect(fill = "white")) +
+    strip.text.y.left = element_text(angle = 0),
+    plot.background = element_rect(fill = "white")
+  ) +
   coord_flip() +
-  facet_wrap(~CHR, nrow = length(chrom_sizes$CHR), strip.position = "left") + ggtitle("Runs of Homozygosity (ROH)")
+  facet_wrap(~CHR, nrow = length(chrom_sizes$CHR), strip.position = "left") +
+  ggtitle("Runs of Homozygosity (ROH)")
 
 
 roh_plot
