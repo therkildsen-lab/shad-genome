@@ -23,7 +23,7 @@ axis(1,
         6 * 10^(4:10), 7 * 10^(4:10), 8 * 10^(4:10), 9 * 10^(4:10)
     )
 )
-mtext("Years", side = 1, line = 2.5)
+mtext("Years", side = 1, line = 2)
 mtext(expression(paste("Effective Population Size (x10"^"4", ")")),
     side = 2, line = 2
 )
