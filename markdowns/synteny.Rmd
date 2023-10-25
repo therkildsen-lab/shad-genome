@@ -6,9 +6,9 @@ output: github_document
 
 ```{r setup, include=FALSE, cache = FALSE}
 knitr::opts_knit$set(
-  root.dir = rprojroot::find_rstudio_root_file()
-  )
-knitr::opts_chunk$set(echo = TRUE,  warning = FALSE, message = FALSE, fig.height = 12, fig.width = 12)
+    root.dir = rprojroot::find_rstudio_root_file()
+)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.height = 12, fig.width = 12)
 ```
 
 ```{r, include=FALSE}
@@ -22,15 +22,17 @@ library(circlize)
 ```
 
 
-```{r}
-#read in tab and convert to ucsc naming
-synteny_tab_og <- read_delim("last/last_fAloSap1_medaka.tab", 
-    delim = "\t", escape_double = FALSE, 
-    col_names = FALSE, trim_ws = TRUE, skip = 31)
+```{r, eval = FALSE}
+# read in tab and convert to ucsc naming
+synteny_tab_og <- read_delim("last/last_fAloSap1_medaka.tab",
+    delim = "\t", escape_double = FALSE,
+    col_names = FALSE, trim_ws = TRUE, skip = 31
+)
 
-synteny_tab <- read_delim("last/last_fAloSap1_medaka.tab", 
-    delim = "\t", escape_double = FALSE, 
-    col_names = FALSE, trim_ws = TRUE, skip = 31) %>% relocate(X7, X8)
+synteny_tab <- read_delim("last/last_fAloSap1_medaka.tab",
+    delim = "\t", escape_double = FALSE,
+    col_names = FALSE, trim_ws = TRUE, skip = 31
+) %>% relocate(X7, X8)
 
 write_tsv(synteny_tab, "last/synteny_tab_mod.tab", col_names = F)
 ```
@@ -39,16 +41,15 @@ write_tsv(synteny_tab, "last/synteny_tab_mod.tab", col_names = F)
 reads/chromToUcsc -i last/synteny_tab_mod.tab -o last/synteny_tab_mod.ucsc.tab -a reads/fAloSap1.chromAlias.tsv
 ```
 
-```{r}
+```{r, eval = FALSE}
 synteny_tab_ucsc_1 <- read_tsv("last/synteny_tab_mod.ucsc.tab", col_names = F) %>%
-  relocate(X4, X5) %>% 
-  mutate(X1 = paste0("shad_", X1))
+    relocate(X4, X5) %>%
+    mutate(X1 = paste0("shad_", X1))
 
 write_tsv(synteny_tab_ucsc_1,
-          "last/synteny_tab_mod.tab",
-          col_names = F)
-
-
+    "last/synteny_tab_mod.tab",
+    col_names = F
+)
 ```
 
 ```{bash, eval=F, include=T}
@@ -56,51 +57,63 @@ reads/chromToUcsc -i last/synteny_tab_mod.tab -o last/synteny_tab_mod.ucsc.tab -
 ```
 
 ```{r}
-synteny_tab_final <- read_tsv("last/synteny_tab_mod.ucsc.tab", col_names = F) %>% 
-  mutate(X1 = paste0("medaka_", X1))
+synteny_tab_final <- read_tsv("/workdir/azwad/shad-genome/last/synteny_tab_mod.ucsc.tab", col_names = F) %>%
+    mutate(X1 = paste0("medaka_", X1))
 ```
 
 ```{r}
 synteny_tab_filtered <-
-  synteny_tab_final %>% dplyr::rename(
-    "medaka_chr" = "X1",
-    "medaka_start" = "X2",
-    "shad_chr" = "X3",
-    "shad_start" = "X4",
-    "length" = "X6"
-  ) %>% 
-  select(c(medaka_chr, medaka_start, shad_chr, shad_start, length)) %>%
-  mutate(medaka_end = medaka_start + length, .after = medaka_start) %>%
-  mutate(shad_end = shad_start + length, .after = shad_start) %>% 
-  mutate(
-    medaka_chr = str_remove(medaka_chr, "medaka_")
-    ) %>% 
-  filter(shad_chr %in% c(paste0("shad_chr", c(1:24))),
-         medaka_chr %in% c(paste0("chr", c(1:24)))
-         )
+    synteny_tab_final %>%
+    dplyr::rename(
+        "medaka_chr" = "X1",
+        "medaka_start" = "X2",
+        "shad_chr" = "X3",
+        "shad_start" = "X4",
+        "length" = "X6"
+    ) %>%
+    select(c(medaka_chr, medaka_start, shad_chr, shad_start, length)) %>%
+    mutate(medaka_end = medaka_start + length, .after = medaka_start) %>%
+    mutate(shad_end = shad_start + length, .after = shad_start) %>%
+    mutate(
+        medaka_chr = str_remove(medaka_chr, "medaka_")
+    ) %>%
+    filter(
+        shad_chr %in% c(paste0("shad_chr", c(1:24))),
+        medaka_chr %in% c(paste0("chr", c(1:24)))
+    )
 ```
 
 
 
 ```{r}
 shad_ref <-
-  read_tsv("assembly/sizes.genome.ucsc", col_names = F) %>% mutate(X1 = paste0("shad_", X1)) %>% filter(X1 %in% c(paste0("shad_chr", c(1:24))))
+    read_tsv("/workdir/azwad/shad-genome/assembly/sizes.genome.ucsc", col_names = F) %>%
+    mutate(X1 = paste0("shad_", X1)) %>%
+    filter(X1 %in% c(paste0("shad_chr", c(1:24))))
 
 shad_cyto <-
-  shad_ref %>% dplyr::rename(chr = X1,
-                             starts = X2,
-                             lengths = X3) %>% mutate(cumsum = cumsum(lengths))  %>%
-  select(1, 2, 4, 3)
+    shad_ref %>%
+    dplyr::rename(
+        chr = X1,
+        starts = X2,
+        lengths = X3
+    ) %>%
+    mutate(cumsum = cumsum(lengths)) %>%
+    select(1, 2, 4, 3)
 shad_cyto$starts <- c(0, shad_cyto$cumsum[1:23])
 
 medaka_ref <-
-  read_tsv("other_genomes/medaka/ref/medaka.ucsc.genome", col_names = F) %>% filter(X1 %in% c(paste0("chr", c(1:24))))
+    read_tsv("/workdir/azwad/shad-genome/other_genomes/medaka/ref/medaka.ucsc.genome", col_names = F) %>% filter(X1 %in% c(paste0("chr", c(1:24))))
 
 medaka_cyto <-
-  medaka_ref %>% dplyr::rename(chr = X1,
-                               starts = X2,
-                               lengths = X3) %>% mutate(cumsum = cumsum(lengths))  %>%
-  select(1, 2, 4, 3)
+    medaka_ref %>%
+    dplyr::rename(
+        chr = X1,
+        starts = X2,
+        lengths = X3
+    ) %>%
+    mutate(cumsum = cumsum(lengths)) %>%
+    select(1, 2, 4, 3)
 medaka_cyto$starts <- c(0, medaka_cyto$cumsum[1:23])
 
 
@@ -118,39 +131,44 @@ combined_ref <- rbind(medaka_ref_rev, shad_ref)
 # shad <- synteny_tab_corrected_filtered %>% select(shad_chr, shad_start, shad_end)
 # medaka <- synteny_tab_corrected_filtered %>% select(medaka_chr, medaka_start, medaka_end)
 
-shad <- synteny_tab_filtered %>% filter(length > 200) %>%  select(shad_chr, shad_start, shad_end) 
-medaka <- synteny_tab_filtered %>% filter(length > 200) %>% select(medaka_chr, medaka_start, medaka_end)
-
-
-shad_col <-  shad %>% select(shad_chr) %>% unique() %>% arrange(as.integer(substr(shad_chr,4,6)))
-shad_col$col <- turbo(n=24. , alpha = 0.02)
-
-shad <- left_join(shad, shad_col)
-
+shad <- synteny_tab_filtered %>%
+    filter(length > 200) %>%
+    select(shad_chr, shad_start, shad_end)
+medaka <- synteny_tab_filtered %>%
+    filter(length > 200) %>%
+    select(medaka_chr, medaka_start, medaka_end)
 ```
 
 
-```{r}
+```{r, eval = TRUE, dpi = 320}
+chromcounts <- as.data.frame(table(shad$shad_chr))
+col_palette <- turbo(n = nrow(chromcounts), alpha = 0.03)
+col_list <- rep(col_palette, chromcounts$Freq)
+
 circos.clear()
 col_text <- "white"
-circos.par("track.height"=0.8, gap.degree=0.5, cell.padding=c(0, 0, 0, 0))
-circos.initialize(factors=combined_ref$X1, xlim=matrix(c(rep(0, 48), combined_ref$X3), ncol=2))
+circos.par("track.height" = 0.8, gap.degree = 0.5, cell.padding = c(0, 0, 0, 0))
+circos.initialize(factors = combined_ref$X1, xlim = matrix(c(rep(0, 48), combined_ref$X3), ncol = 2))
 
 # genomes
-circos.track(ylim=c(0, 1), panel.fun=function(x, y) {
-chr=CELL_META$sector.index
-xlim=CELL_META$xlim
-ylim=CELL_META$ylim
-circos.text(mean(xlim), mean(ylim), gsub(".*chr", "",chr), cex=1, col=col_text,
-facing="bending.inside", niceFacing=TRUE)
-}, bg.col=c(rep("gray70", 24), rep("cornflowerblue", 24)), bg.border=F, track.height=0.12)
+circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
+    chr <- CELL_META$sector.index
+    xlim <- CELL_META$xlim
+    ylim <- CELL_META$ylim
+    circos.text(mean(xlim), mean(ylim), gsub(".*chr", "", chr),
+        cex = 1, col = col_text,
+        facing = "bending.inside", niceFacing = TRUE
+    )
+}, bg.col = c(rep("gray70", 24), rep("cornflowerblue", 24)), bg.border = F, track.height = 0.12)
 
 
-brk <- c(0, 10, 20, 30, 40, 50, 60)*10^6
-circos.track(track.index = get.current.track.index(), panel.fun=function(x, y) {
-circos.axis(h="top", major.at=brk, labels=round(brk/10^7, 1), labels.cex=0.5, 
-col="grey30", labels.col="grey30", lwd=1, labels.facing="clockwise")
-}, bg.border=F)
+brk <- c(0, 10, 20, 30, 40, 50, 60) * 10^6
+circos.track(track.index = get.current.track.index(), panel.fun = function(x, y) {
+    circos.axis(
+        h = "top", major.at = brk, labels = round(brk / 10^7, 1), labels.cex = 0.5,
+        col = "grey30", labels.col = "grey30", lwd = 1, labels.facing = "clockwise"
+    )
+}, bg.border = F)
 
 # circos.track(
 #     ylim = c(0,10),
@@ -161,9 +179,9 @@ col="grey30", labels.col="grey30", lwd=1, labels.facing="clockwise")
 #     bg.border = F
 # )
 
-circos.genomicLink(shad,medaka, col= rev(shad$col))
-
+circos.genomicLink(shad, medaka, col = col_list, border = col_list)
 ```
+
 
 
 
