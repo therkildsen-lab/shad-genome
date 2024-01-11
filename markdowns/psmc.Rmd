@@ -4,17 +4,17 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, fig.width = 15, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = TRUE, fig.width = 15, warning = FALSE, message = FALSE, dpi = 320)
 library(tidyverse)
 ```
 
 
 ### Plot PSMC results for Shad & Herring
-```{r, fig.height=8, fig.width=8}
+```{r, fig.height=8, fig.width=10}
 setwd("/local/workdir/azwad/shad-genome/psmc")
 
 # Set up plot
-plot(c(10000, 40000000), c(0, 475),
+plot(c(10000, 40000000), c(0, 110),
     pch = "",
     log = "x", ylab = "", xlab = "", xaxt = "n"
 )
@@ -38,7 +38,7 @@ mtext(expression(paste("Effective Population Size (x10"^"4", ")")),
 ## Plot shad data
 
 # Plot bootstrapped lines
-for (i in 1:99) {
+for (i in 0:100) {
     psmc <- read_table(paste0("plot_data/shad_psmc_combined.", i, ".txt"), col_names = F)
     lines(psmc$X1, psmc$X2, type = "s", lwd = 2, col = "#FF000008")
 }
@@ -51,10 +51,10 @@ lines(psmc$X1, psmc$X2, type = "s", lwd = 4, col = "#880000")
 
 # Plot in herring data
 
-setwd("/local/workdir/azwad/shad-genome/other_genomes/ChASM_A3/reads/illumina/psmc")
+setwd("/local/workdir/azwad/shad-genome/other_genomes/herring_2015/psmc_no_A_flag_mpileup")
 
 # Plot bootstrapped lines
-for (i in 1:99) {
+for (i in 0:96) {
     psmc <- read_table(paste0("plot_data/herring_psmc_combined.", i, ".txt"), col_names = F)
     lines(psmc$X1, psmc$X2, type = "s", lwd = 2, col = "#0050910e")
 }
@@ -62,9 +62,26 @@ for (i in 1:99) {
 psmc <- read_table("plot_data/herring_psmc_combined.0.txt", col_names = F)
 lines(psmc$X1, psmc$X2, type = "s", lwd = 4, col = "#002c50")
 
+
+# Plot in Allis shad data
+
+setwd("/local/workdir/azwad/shad-genome/other_genomes/Alosa_alosa/reads/psmc")
+
+# Plot bootstrapped lines
+for (i in 0:100) {
+    psmc <- read_table(paste0("plot_data/allis_psmc_combined.", i, ".txt"), col_names = F) %>%
+        filter(X2 < 400)
+    lines(psmc$X1, psmc$X2, type = "s", lwd = 2, col = "#0088560c")
+}
+
+psmc <- read_table("plot_data/allis_psmc_combined.0.txt", col_names = F) %>%
+    filter(X2 < 400)
+
+lines(psmc$X1, psmc$X2, type = "s", lwd = 4, col = "#008856")
+
 legend("topright",
-    legend = c("Atlantic herring", "American shad"),
-    col = c("#002c50", "#880000"),
+    legend = c("Atlantic herring", "American shad", "Allis shad"),
+    col = c("#002c50", "#880000", "#008856"),
     lty = 1,
     lwd = 4,
     cex = 1.3

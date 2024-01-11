@@ -36,58 +36,91 @@ TEs identified by RepeatModeler.
 setwd("/workdir/azwad/shad-genome")
 
 shad_repeats <-
-  read_tsv(
-    "repeats/genome_mask/fAloSap1_repeats.out",
-    col_names = c("chrom", "start", "end", "type")
-  ) %>% mutate(type = gsub("\\/.*","", type), type = ifelse(type == "SINE?", "SINE", type))
+    read_tsv(
+        "repeats/genome_mask/fAloSap1_repeats.out",
+        col_names = c("chrom", "start", "end", "type")
+    ) %>% mutate(type = gsub("\\/.*", "", type), type = ifelse(type == "SINE?", "SINE", type))
 
 chroms <- paste0("chr", c(1:24))
 
 chrom_sizes <-
-  read_tsv("assembly/sizes.genome.ucsc",
-           col_names = c("chrom", "start", "length")) %>%
-  select(c(chrom, length)) %>%
-  filter(chrom %in% chroms) %>%
-  mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom))))
+    read_tsv("assembly/sizes.genome.ucsc",
+        col_names = c("chrom", "start", "length")
+    ) %>%
+    select(c(chrom, length)) %>%
+    filter(chrom %in% chroms) %>%
+    mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom))))
 
-repeat_plot <- shad_repeats %>% filter(chrom %in% chroms) %>%
-  mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
-  ggplot()  +
-  geom_rect(
-    data = chrom_sizes,
-    aes(ymin = 0, ymax = length),
-    xmin = 0,
-    xmax = 1,
-    col = NA,
-    fill = "gray90"
-  ) +
-  geom_rect(
-    aes(ymin = start, ymax = end, fill = type),
-    xmin = 0,
-    xmax = 1,
-    alpha = 1
-  ) +
-  geom_rect(
-    data = chrom_sizes,
-    aes(ymin = 0, ymax = length),
-    xmin = 0,
-    xmax = 1,
-    col = "black" ,
-    fill = NA
-  ) +
-  scale_fill_viridis(discrete = TRUE, direction = -1) +
-  theme_minimal() +
-  theme(
+repeat_plot <- shad_repeats %>%
+    filter(chrom %in% chroms) %>%
+    mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
+    ggplot() +
+    geom_rect(
+        data = chrom_sizes,
+        aes(ymin = 0, ymax = length),
+        xmin = 0,
+        xmax = 1,
+        col = NA,
+        fill = "gray90"
+    ) +
+    geom_rect(
+        aes(ymin = start, ymax = end, fill = type),
+        xmin = 0,
+        xmax = 1,
+        alpha = 1
+    ) +
+    geom_rect(
+        data = chrom_sizes,
+        aes(ymin = 0, ymax = length),
+        xmin = 0,
+        xmax = 1,
+        col = "black",
+        fill = NA
+    ) +
+    ylab("Position") +
+    scale_fill_viridis(discrete = TRUE) +
+    theme_minimal() +
+    theme(
         strip.text.y.left = element_text(angle = 0),
-        plot.background = element_rect(fill = "white")) +
-  coord_flip() +
-  facet_wrap( ~ `chrom`, nrow = length(chroms), strip.position = "left")
+        plot.background = element_rect(fill = "white")
+    ) +
+    coord_flip() +
+    facet_wrap(~`chrom`, nrow = length(chroms), strip.position = "left")
 
 
-repeat_plot 
+repeat_plot
 ```
 
 ![](repetitive_regions_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+
+``` r
+#Are particular types of repeats concentrated towards ends of genomes?
+shad_repeats %>%
+    filter(chrom %in% chroms) %>%
+    mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
+    left_join(chrom_sizes) %>%
+    mutate(dist_end = length - end) %>%
+    group_by(type) %>%
+    summarize(mean_dist_end = mean(dist_end), mean_start = mean(start)) %>%
+    arrange(mean_dist_end, mean_start) %>%
+    kable()
+```
+
+| type             | mean_dist_end | mean_start |
+|:-----------------|--------------:|-----------:|
+| Integrated-virus |      15352436 |   20443371 |
+| Satellite        |      16565715 |   21445148 |
+| tRNA             |      18060096 |   18873431 |
+| Simple_repeat    |      18158667 |   19486921 |
+| SINE             |      18171647 |   19807741 |
+| DNA              |      18289747 |   19659708 |
+| LINE             |      18517506 |   19863749 |
+| LTR              |      18602237 |   19651570 |
+| Low_complexity   |      18890721 |   18798829 |
+| Unknown          |      19022824 |   19292107 |
+| Other            |      19182599 |   18352308 |
+| RC               |      20351481 |   18414105 |
+
 <br>
 
 #### Composition of Repetitive Elements
@@ -95,23 +128,23 @@ repeat_plot
 ``` r
 ## Code from Kristina Galagova; See: https://github.com/oushujun/EDTA/issues/92
 setwd("/workdir/azwad/shad-genome")
-KimuraDistance <- read.csv("repeats/genome_mask_2/GCF_018492685.fa.distance", sep=" ")
+KimuraDistance <- read.csv("repeats/genome_mask_2/GCF_018492685.fa.distance", sep = " ")
 
-#add here the genome size in bp
-genomes_size=903581644
+# add here the genome size in bp
+genomes_size <- 903581644
 
-kd_melt = melt(KimuraDistance,id="Div")
-kd_melt$norm = kd_melt$value/genomes_size * 100
+kd_melt <- melt(KimuraDistance, id = "Div")
+kd_melt$norm <- kd_melt$value / genomes_size * 100
 
-ggplot(kd_melt, aes(fill=variable, y=norm, x=Div)) + 
-  geom_bar(position="stack", stat="identity",color="black") +
-  scale_fill_viridis(discrete = T) +
-  theme_classic() +
-  xlab("Kimura substitution level") +
-  ylab("Percent of the genome") + 
-  labs(fill = "") +
-  coord_cartesian(xlim = c(0, 55)) +
-  theme(axis.text=element_text(size=11),axis.title =element_text(size=12))
+ggplot(kd_melt, aes(fill = variable, y = norm, x = Div)) +
+    geom_bar(position = "stack", stat = "identity", color = "black") +
+    scale_fill_viridis(discrete = T) +
+    theme_classic() +
+    xlab("Kimura substitution level") +
+    ylab("Percent of the genome (%)") +
+    labs(fill = "") +
+    coord_cartesian(xlim = c(0, 55)) +
+    theme(axis.text = element_text(size = 11), axis.title = element_text(size = 12))
 ```
 
 ![](repetitive_regions_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->

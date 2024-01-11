@@ -4,14 +4,14 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, fig.width = 15, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, dpi = 320)
 library(tidyverse)
+library(knitr)
 library(viridis)
 library(reshape)
 library(hrbrthemes)
 library(gridExtra)
 library(ggplot2)
-
 ```
 
 # Annotating Repetitive Regions 
@@ -27,91 +27,100 @@ The repeat sequences in the genome assembly was soft masked with RepeatMasker (v
 
 #### Genome-wide distribution of repetitive regions
 
-```{r, fig.height=10}
+```{r, fig.height=8, fig.width= 8}
 setwd("/workdir/azwad/shad-genome")
 
 shad_repeats <-
-  read_tsv(
-    "repeats/genome_mask/fAloSap1_repeats.out",
-    col_names = c("chrom", "start", "end", "type")
-  ) %>% mutate(type = gsub("\\/.*","", type), type = ifelse(type == "SINE?", "SINE", type))
+    read_tsv(
+        "repeats/genome_mask/fAloSap1_repeats.out",
+        col_names = c("chrom", "start", "end", "type")
+    ) %>% mutate(type = gsub("\\/.*", "", type), type = ifelse(type == "SINE?", "SINE", type))
 
 chroms <- paste0("chr", c(1:24))
 
 chrom_sizes <-
-  read_tsv("assembly/sizes.genome.ucsc",
-           col_names = c("chrom", "start", "length")) %>%
-  select(c(chrom, length)) %>%
-  filter(chrom %in% chroms) %>%
-  mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom))))
+    read_tsv("assembly/sizes.genome.ucsc",
+        col_names = c("chrom", "start", "length")
+    ) %>%
+    select(c(chrom, length)) %>%
+    filter(chrom %in% chroms) %>%
+    mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom))))
 
-repeat_plot <- shad_repeats %>% filter(chrom %in% chroms) %>%
-  mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
-  ggplot()  +
-  geom_rect(
-    data = chrom_sizes,
-    aes(ymin = 0, ymax = length),
-    xmin = 0,
-    xmax = 1,
-    col = NA,
-    fill = "gray90"
-  ) +
-  geom_rect(
-    aes(ymin = start, ymax = end, fill = type),
-    xmin = 0,
-    xmax = 1,
-    alpha = 1
-  ) +
-  geom_rect(
-    data = chrom_sizes,
-    aes(ymin = 0, ymax = length),
-    xmin = 0,
-    xmax = 1,
-    col = "black" ,
-    fill = NA
-  ) +
-<<<<<<< HEAD
-  ylab("Position") +
-=======
->>>>>>> c7185563df0082f836d4913b8275ba9856353b6d
-  scale_fill_viridis(discrete = TRUE, direction = -1) +
-  theme_minimal() +
-  theme(
+repeat_plot <- shad_repeats %>%
+    filter(chrom %in% chroms) %>%
+    mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
+    ggplot() +
+    geom_rect(
+        data = chrom_sizes,
+        aes(ymin = 0, ymax = length),
+        xmin = 0,
+        xmax = 1,
+        col = NA,
+        fill = "gray90"
+    ) +
+    geom_rect(
+        aes(ymin = start, ymax = end, fill = type),
+        xmin = 0,
+        xmax = 1,
+        alpha = 1
+    ) +
+    geom_rect(
+        data = chrom_sizes,
+        aes(ymin = 0, ymax = length),
+        xmin = 0,
+        xmax = 1,
+        col = "black",
+        fill = NA
+    ) +
+    ylab("Position") +
+    scale_fill_viridis(discrete = TRUE) +
+    theme_minimal() +
+    theme(
         strip.text.y.left = element_text(angle = 0),
-        plot.background = element_rect(fill = "white")) +
-  coord_flip() +
-  facet_wrap( ~ `chrom`, nrow = length(chroms), strip.position = "left")
+        plot.background = element_rect(fill = "white")
+    ) +
+    coord_flip() +
+    facet_wrap(~`chrom`, nrow = length(chroms), strip.position = "left")
 
 
-repeat_plot 
+repeat_plot
 
+
+#Are particular types of repeats concentrated towards ends of genomes?
+shad_repeats %>%
+    filter(chrom %in% chroms) %>%
+    mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
+    left_join(chrom_sizes) %>%
+    mutate(dist_end = length - end) %>%
+    group_by(type) %>%
+    summarize(mean_dist_end = mean(dist_end), mean_start = mean(start)) %>%
+    arrange(mean_dist_end, mean_start) %>%
+    kable()
 ```  
 <br>  
 
 #### Composition of Repetitive Elements  
 
-```{r, fig.width=20, fig.height=15}
-
+```{r, fig.height=8, fig.width=18}
 ## Code from Kristina Galagova; See: https://github.com/oushujun/EDTA/issues/92
 setwd("/workdir/azwad/shad-genome")
-KimuraDistance <- read.csv("repeats/genome_mask_2/GCF_018492685.fa.distance", sep=" ")
+KimuraDistance <- read.csv("repeats/genome_mask_2/GCF_018492685.fa.distance", sep = " ")
 
-#add here the genome size in bp
-genomes_size=903581644
+# add here the genome size in bp
+genomes_size <- 903581644
 
-kd_melt = melt(KimuraDistance,id="Div")
-kd_melt$norm = kd_melt$value/genomes_size * 100
+kd_melt <- melt(KimuraDistance, id = "Div")
+kd_melt$norm <- kd_melt$value / genomes_size * 100
 
-ggplot(kd_melt, aes(fill=variable, y=norm, x=Div)) + 
-  geom_bar(position="stack", stat="identity",color="black") +
-  scale_fill_viridis(discrete = T) +
-  theme_classic() +
-  xlab("Kimura substitution level") +
-  ylab("Percent of the genome") + 
-  labs(fill = "") +
-  coord_cartesian(xlim = c(0, 55)) +
-  theme(axis.text=element_text(size=11),axis.title =element_text(size=12))
-
+ggplot(kd_melt, aes(fill = variable, y = norm, x = Div)) +
+    geom_bar(position = "stack", stat = "identity", color = "black") +
+    scale_fill_viridis(discrete = T) +
+    theme_classic() +
+    xlab("Kimura substitution level") +
+    ylab("Percent of the genome (%)") +
+    labs(fill = "") +
+    coord_cartesian(xlim = c(0, 55)) +
+    theme(axis.text = element_text(size = 11), axis.title = element_text(size = 12))
 ```
 
 
