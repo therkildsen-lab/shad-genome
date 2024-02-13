@@ -94,7 +94,7 @@ repeat_plot
 ![](repetitive_regions_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
 
 ``` r
-#Are particular types of repeats concentrated towards ends of genomes?
+# Are particular types of repeats concentrated towards ends of genomes?
 shad_repeats %>%
     filter(chrom %in% chroms) %>%
     mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
@@ -123,6 +123,41 @@ shad_repeats %>%
 
 <br>
 
+#### Separating repeats by type to identify any spacial patterns of distribution on the genome
+
+``` r
+shad_repeats %>%
+    filter(chrom %in% chroms) %>%
+    mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
+    left_join(chrom_sizes) %>%
+    mutate(relative_pos = ((end + start) / 2) / length) %>%
+    ggplot() +
+    geom_density(aes(x = relative_pos, fill = type), alpha = 0.5) +
+    scale_fill_viridis(discrete = TRUE) +
+    facet_wrap(~type, scales = "free_y") +
+    ylab("Density") +
+    xlab("Relative Genomic Position") +
+    theme_classic() +
+    theme(legend.position = "none")
+```
+
+![](repetitive_regions_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+``` r
+shad_repeats %>%
+    filter(chrom %in% chroms) %>%
+    mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
+    ggplot() +
+    geom_histogram(aes(x = start, fill = type), alpha = 0.5) +
+    scale_fill_viridis(discrete = TRUE) +
+    facet_wrap(~chrom, scales = "free", nrow = length(chroms), strip.position = "right") +
+    ylab("Density") +
+    xlab("Genomic Position") +
+    theme_classic()
+```
+
+![](repetitive_regions_files/figure-gfm/unnamed-chunk-2-2.png)<!-- -->
+
 #### Composition of Repetitive Elements
 
 ``` r
@@ -147,4 +182,4 @@ ggplot(kd_melt, aes(fill = variable, y = norm, x = Div)) +
     theme(axis.text = element_text(size = 11), axis.title = element_text(size = 12))
 ```
 
-![](repetitive_regions_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](repetitive_regions_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
