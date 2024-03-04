@@ -32,7 +32,7 @@ setwd("/workdir/azwad/shad-genome")
 
 shad_repeats <-
     read_tsv(
-        "repeats/genome_mask/fAloSap1_repeats.out",
+        "repeats/genome_mask_final/GCF_018492685.fa_ucsc.tsv",
         col_names = c("chrom", "start", "end", "type")
     ) %>% mutate(type = gsub("\\/.*", "", type), type = ifelse(type == "SINE?", "SINE", type))
 
@@ -77,25 +77,14 @@ repeat_plot <- shad_repeats %>%
     theme_minimal() +
     theme(
         strip.text.y.left = element_text(angle = 0),
-        plot.background = element_rect(fill = "white")
+        plot.background = element_rect(fill = "white"),
+        axis.title = element_text(size = 18)
     ) +
     coord_flip() +
     facet_wrap(~`chrom`, nrow = length(chroms), strip.position = "left")
 
 
 repeat_plot
-
-
-# Are particular types of repeats concentrated towards ends of genomes?
-shad_repeats %>%
-    filter(chrom %in% chroms) %>%
-    mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
-    left_join(chrom_sizes) %>%
-    mutate(dist_end = length - end) %>%
-    group_by(type) %>%
-    summarize(mean_dist_end = mean(dist_end), mean_start = mean(start)) %>%
-    arrange(mean_dist_end, mean_start) %>%
-    kable()
 ```  
 <br>  
 
@@ -134,12 +123,12 @@ shad_repeats %>%
 ```{r, fig.height=8, fig.width=18}
 ## Code from Kristina Galagova; See: https://github.com/oushujun/EDTA/issues/92
 setwd("/workdir/azwad/shad-genome")
-KimuraDistance <- read.csv("repeats/genome_mask_2/GCF_018492685.fa.distance", sep = " ")
+KimuraDistance <- read.csv("repeats/genome_mask_final/GCF_018492685.fa.distance", sep = " ")
 
 # add here the genome size in bp
 genomes_size <- 903581644
 
-kd_melt <- melt(KimuraDistance, id = "Div")
+kd_melt <- melt(KimuraDistance, id = "Div") %>% filter(variable != "X")
 kd_melt$norm <- kd_melt$value / genomes_size * 100
 
 ggplot(kd_melt, aes(fill = variable, y = norm, x = Div)) +
@@ -150,8 +139,99 @@ ggplot(kd_melt, aes(fill = variable, y = norm, x = Div)) +
     ylab("Percent of the genome (%)") +
     labs(fill = "") +
     coord_cartesian(xlim = c(0, 55)) +
-    theme(axis.text = element_text(size = 11), axis.title = element_text(size = 12))
+    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 18))
+
+# Simplified by general class
+
+kd_melt %>%
+    mutate(variable = gsub("\\..*", "", variable), variable = ifelse(variable == "SINE?", "SINE", variable)) %>%
+    ggplot(aes(fill = variable, y = norm, x = Div)) +
+    geom_bar(position = "stack", stat = "identity", color = "black") +
+    scale_fill_viridis(discrete = T) +
+    theme_classic() +
+    xlab("Kimura substitution level") +
+    ylab("Percent of the genome (%)") +
+    labs(fill = "") +
+    coord_cartesian(xlim = c(0, 55)) +
+    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 18))
 ```
 
+#### Comparing composition of repetitive elements between Atlantic herring, Allis shad, and American shad
 
+```{r, fig.height=4, fig.width=12, dpi = 320}
+setwd("/workdir/azwad/shad-genome")
+
+shad <- read_tsv("repeats/genome_mask_final/GCF_018492685.fa.div")
+allis <- read_tsv("other_genomes/Alosa_alosa/repeats/genome_mask_final/GCA_017589495.2_AALO_Geno_1.1_genomic.fna.div")
+herring <- read_tsv("other_genomes/Ch_v2.0.2/repeats/genome_mask_final/GCF_900700415.2_Ch_v2.0.2_genomic.fna.div")
+
+# add here the genome size in bp
+genome_size_shad <- 903581644
+genome_size_allis <- 854464681
+genome_size_herring <- 725686888
+
+shad_summary <- shad %>%
+    mutate(Class = gsub("\\/.*", "", Class), Class = ifelse(Class == "SINE?", "SINE", Class)) %>%
+    group_by(Class) %>%
+    summarize(
+        sumlen = sum(absLen),
+        len_percent = sumlen / genome_size_shad * 100
+    )
+
+shad_summary <- shad_summary %>%
+    add_row(Class = "Unmasked", sumlen = genome_size_shad - sum(shad_summary$sumlen), len_percent = 100 - sum(shad_summary$len_percent)) %>%
+    mutate(species = "Alosa sapidissima")
+
+allis_summary <- allis %>%
+    mutate(Class = gsub("\\/.*", "", Class), Class = ifelse(Class == "SINE?", "SINE", Class)) %>%
+    group_by(Class) %>%
+    summarize(
+        sumlen = sum(absLen),
+        len_percent = sumlen / genome_size_allis * 100
+    )
+
+allis_summary <- allis_summary %>%
+    add_row(Class = "Unmasked", sumlen = genome_size_allis - sum(allis_summary$sumlen), len_percent = 100 - sum(allis_summary$len_percent)) %>%
+    mutate(species = "Alosa alosa")
+
+herring_summary <- herring %>%
+    mutate(Class = gsub("\\/.*", "", Class), Class = ifelse(Class == "SINE?", "SINE", Class)) %>%
+    group_by(Class) %>%
+    summarize(
+        sumlen = sum(absLen),
+        len_percent = sumlen / genome_size_herring * 100
+    )
+
+herring_summary <- herring_summary %>%
+    add_row(Class = "Unmasked", sumlen = genome_size_herring - sum(herring_summary$sumlen), len_percent = 100 - sum(herring_summary$len_percent)) %>%
+    mutate(species = "Clupea harengus")
+
+
+total_summary <- rbind(shad_summary, allis_summary, herring_summary)
+
+mycolor <- c(viridis(6, option = "D"), "grey60")
+
+total_summary %>%
+    filter(len_percent > 0.7) %>%
+    mutate(species = factor(species, levels = c("Clupea harengus", "Alosa alosa", "Alosa sapidissima"))) %>%
+    ggplot(aes(x = species, y = len_percent, fill = Class)) +
+    geom_col(width = 0.5, position = position_fill()) +
+    geom_text(aes(label = round(len_percent, digits = 1)),
+        color = "white",
+        position = position_fill(vjust = 0.5),
+        size = 4
+    ) +
+    coord_flip() +
+    scale_fill_manual(values = mycolor) +
+    theme_classic() +
+    xlab("") +
+    ylab("Percentage of sequence (%)") +
+    scale_y_continuous(labels = c(0, 25, 50, 75, 100)) +
+    theme(
+        axis.line.y = element_blank(), axis.ticks.y = element_blank(),
+        axis.text.y = element_text(size = 16, colour = "black", face = "italic"),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14)
+    )
+```
 
