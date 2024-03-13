@@ -16,23 +16,25 @@ setwd("/local/workdir/azwad/shad-genome/psmc")
 # Set up plot
 plot(c(10000, 40000000), c(0, 110),
     pch = "",
-    log = "x", ylab = "", xlab = "", xaxt = "n"
+    log = "x", ylab = "", xlab = "", xaxt = "n",
+	cex.lab=1.25, cex.axis=1.25, cex.main=1.25, cex.sub=1.25
 )
 axis(1,
     tcl = -0.7,
     at = c(10^(4:10)),
-    labels = sapply(c(4:10), function(i) as.expression(bquote(10^.(i))))
+    labels = sapply(c(4:10), function(i) as.expression(bquote(10^.(i)))),
+	cex.lab=1.25, cex.axis=1.25, cex.main=1.25, cex.sub=1.25
 )
 axis(1,
-    tcl = -0.4, labels = NA,
+    tcl = -0.4, labels = NA, cex.lab=1.25, cex.axis=1.25, cex.main=1.25, cex.sub=1.25,
     at = c(
         2 * 10^(4:10), 3 * 10^(4:10), 4 * 10^(4:10), 5 * 10^(4:10),
         6 * 10^(4:10), 7 * 10^(4:10), 8 * 10^(4:10), 9 * 10^(4:10)
     )
 )
-mtext("Years", side = 1, line = 2)
+mtext("Years", side = 1, line = 2, cex=1.25)
 mtext(expression(paste("Effective Population Size (x10"^"4", ")")),
-    side = 2, line = 2
+    side = 2, line = 2, cex=1.25,
 )
 
 ## Plot shad data

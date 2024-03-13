@@ -54,6 +54,7 @@ chrom_sizes <-
 repeat_plot <- shad_repeats %>%
     filter(chrom %in% chroms) %>%
     mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
+    dplyr::rename(Class = type)  %>% 
     ggplot() +
     geom_rect(
         data = chrom_sizes,
@@ -64,7 +65,7 @@ repeat_plot <- shad_repeats %>%
         fill = "gray90"
     ) +
     geom_rect(
-        aes(ymin = start, ymax = end, fill = type),
+        aes(ymin = start, ymax = end, fill = Class),
         xmin = 0,
         xmax = 1,
         alpha = 1
@@ -83,7 +84,9 @@ repeat_plot <- shad_repeats %>%
     theme(
         strip.text.y.left = element_text(angle = 0),
         plot.background = element_rect(fill = "white"),
-        axis.title = element_text(size = 18)
+        axis.title = element_text(size = 18),
+        axis.text = element_text(size = 14),
+        strip.text = element_text(size = 16)
     ) +
     coord_flip() +
     facet_wrap(~`chrom`, nrow = length(chroms), strip.position = "left")

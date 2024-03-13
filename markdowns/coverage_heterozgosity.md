@@ -182,7 +182,6 @@ snp_window_plot_50kb <- snp_gt_50kb_window_filtered %>%
         strip.position = "top",
         scales = "free_x"
     ) +
-    ggtitle("Heterozygosity by Chromosome (50kb windows) \n fAloSap1.pri") +
     xlab("") +
     ylab("Heterozygosity per kilobase") +
     theme_classic() +
@@ -195,7 +194,9 @@ snp_window_plot_50kb <- snp_gt_50kb_window_filtered %>%
         panel.grid = element_blank(),
         axis.ticks.x = element_blank(),
         plot.background = element_rect(fill = "white"),
-        panel.spacing.x = unit(0, "lines")
+        panel.spacing.x = unit(0, "lines"),
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12)
     ) +
     scale_color_manual(values = c("dodgerblue4", "cornflowerblue"))
 
@@ -219,9 +220,13 @@ snp_hist_50kb <- snp_gt_50kb_window_filtered %>%
         color = "#000000",
         fill = "dodgerblue4"
     ) +
-    xlab("Heterozygosity per Kilobase") +
-    ylab("# of Windows") +
-    theme_classic()
+    xlab("Heterozygosity per kilobase") +
+    ylab("Number of windows") +
+    theme_classic() +
+    theme(
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 14)
+    )
 
 snp_hist_50kb
 ```
