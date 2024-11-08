@@ -3,6 +3,8 @@ Coverage and Heterozygosity
 
 # Genome-wide Coverage and Heterozygosity
 
+\*\*\* needs to be updated with gatk4 protocols \*\*\*
+
 Pacbio HiFi reads used to generate the reference sequence for
 fAloSap1.pri were mapped back onto the reference genome with [minimap2
 2.24](https://github.com/lh3/minimap2) with the `map-hifi` setting and
@@ -78,7 +80,6 @@ genome_cov_plot <- cov_50kb %>%
 genome_cov_plot
 ```
 
-![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 <br>
 
 #### Genome-wide heterozygosity
@@ -179,7 +180,7 @@ snp_window_plot_50kb <- snp_gt_50kb_window_filtered %>%
     facet_wrap(
         ~`Chromosome`,
         ncol = 24,
-        strip.position = "top",
+        strip.position = "bottom",
         scales = "free_x"
     ) +
     xlab("") +
@@ -196,15 +197,18 @@ snp_window_plot_50kb <- snp_gt_50kb_window_filtered %>%
         plot.background = element_rect(fill = "white"),
         panel.spacing.x = unit(0, "lines"),
         axis.title = element_text(size = 14),
-        axis.text = element_text(size = 12)
+        axis.text = element_text(size = 12),
+    strip.background = element_blank(),
+        strip.placement = "outside",
+        strip.text = element_text(size = 14)
     ) +
     scale_color_manual(values = c("dodgerblue4", "cornflowerblue"))
 
-het_cov_plot_50kb <- plot_grid(snp_window_plot_50kb,
-    genome_cov_plot,
-    ncol = 1,
-    align = "v"
-)
+# het_cov_plot_50kb <- plot_grid(snp_window_plot_50kb,
+#     genome_cov_plot,
+#     ncol = 1,
+#     align = "v"
+# )
 
 snp_window_plot_50kb
 ```
@@ -242,15 +246,23 @@ snp_gt_50kb_window_filtered %>%
 
 |        x |
 |---------:|
-| 2.182879 |
+| 1.929639 |
+
+#### FILTER tag distributions
+
+``` r
+filt <- read_tsv("../gatk4_outputs/snp_filter_tag.tsv", col_names = c("chrom", "pos", "tag"))
+
+filt %>% ggplot(aes(x = tag)) + geom_bar()
+```
+
+![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 #### Combined coverage and heterozygosity using 50kb windows
 
 ``` r
 het_cov_plot_50kb
 ```
-
-![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 #### Runs of Homozygosity (ROH)
 
@@ -319,7 +331,7 @@ roh_plot <- shad_roh %>%
 roh_plot
 ```
 
-![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 #### Heterozygosity vs Other Fish Species
 
@@ -332,10 +344,10 @@ het_fish %>%
     ggplot(aes(x = `Common Name`, y = `Heterozygosity (%)`, fill = Method)) +
     scale_fill_viridis_d(begin = 0, end = 0.5) +
     geom_col() +
-    annotate("segment", x = 9, y = 0.4, xend = 9, yend = 0.25, linewidth = 1, arrow = arrow(length = unit(0.3, "cm"))) +
+    annotate("segment", x = 8, y = 0.37, xend = 8, yend = 0.22, linewidth = 1, arrow = arrow(length = unit(0.3, "cm"))) +
     xlab("Species") +
     coord_flip() +
     theme_classic()
 ```
 
-![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](coverage_heterozgosity_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->

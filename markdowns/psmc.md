@@ -6,10 +6,12 @@ PSMC
 ``` r
 setwd("/local/workdir/azwad/shad-genome/psmc")
 
+# png(filename="/workdir/azwad/shad-genome/markdowns/psmc_files/figure-gfm/test.png", height=8, width = 10, units = "in", type = "cairo", res = 320)
+
 # Set up plot
 plot(c(10000, 40000000), c(0, 110),
     pch = "",
-    log = "x", ylab = "", xlab = "", xaxt = "n",
+    log = "x", ylab = "", xlab = "", xaxt = "n", type = "n",
     cex.lab=1.25, cex.axis=1.25, cex.main=1.25, cex.sub=1.25
 )
 axis(1,
@@ -29,6 +31,8 @@ mtext("Years", side = 1, line = 2, cex=1.25)
 mtext(expression(paste("Effective Population Size (x10"^"4", ")")),
     side = 2, line = 2, cex=1.25,
 )
+
+
 
 ## Plot shad data
 
@@ -74,6 +78,8 @@ psmc <- read_table("plot_data/allis_psmc_combined.0.txt", col_names = F) %>%
 
 lines(psmc$X1, psmc$X2, type = "s", lwd = 4, col = "#008856")
 
+
+
 legend("topright",
     legend = c("Atlantic herring", "American shad", "Allis shad"),
     col = c("#002c50", "#880000", "#008856"),
@@ -81,6 +87,13 @@ legend("topright",
     lwd = 4,
     cex = 1.3
 )
+
+
+rect(1e4, -1000, 115000, 1e6, col="#FF7F0E1A", border = NA)
 ```
 
 ![](psmc_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+
+``` r
+# dev.off()
+```

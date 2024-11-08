@@ -12,10 +12,9 @@ library(viridis)
 setwd("/local/workdir/azwad/shad-genome/markdowns")
 ```
 
+# Genome-wide Coverage and Heterozygosity
 
-
-
-# Genome-wide Coverage and Heterozygosity  
+\*\*\* needs to be updated with gatk4 protocols \*\*\*
 
 Pacbio HiFi reads used to generate the reference sequence for fAloSap1.pri were mapped back onto the reference genome with [minimap2 2.24](https://github.com/lh3/minimap2) with the `map-hifi` setting and sorted using `samtools sort`. To investigate the degree of heterozygosity present in the genome, we used [GATK 3.8.1](https://gatk.broadinstitute.org/hc/en-us) to perform local realignment around indels (IndelRealigner) and for genotype calling using HaplotypeCaller followed by GenotypeGVCFs. All sites including both variants and invariant sites were called using the `-ERC BP_RESOLUTION` and `-out_mode EMIT_ALL_SITES` parameters on, in HaplotypeCaller. The parameters `-allSites` and `-stand_call_conf 0` were on, in GenotypeGVCFs. We filtered out sites with excessively low or high read depth (1/3X and 2X the genome-wide average, respectively).
 
@@ -24,61 +23,232 @@ Pacbio HiFi reads used to generate the reference sequence for fAloSap1.pri were 
 ```{r, include=FALSE}
 # Load in all the data
 
-# Load in list of SNPs with depth
-# snps <- read_tsv("../reads/fAloSap1_minimap_snps.ucsc.bed", col_names = c("Chromosome", "Position0", "End", "Depth", "GT"))
+# Load in list of SNPs, indels, and invariant positions with depth
+snps <- read_tsv(
+  "../gatk4_outputs/fAloSap1_minimap_dedup_readgroups_haplotypecaller_genotypegvcfs_snps_pass.bed",
+  col_names = c("Chromosome", "Position0", "End", "Depth", "GT")
+) %>%
+  mutate(type = "snp")
 
-# saveRDS(snps, file = "../reads/fAloSap1_snps.rds")
-chroms <- paste0("chr", c(1:24))
+indel <- read_tsv(
+  "../gatk4_outputs/fAloSap1_minimap_dedup_readgroups_haplotypecaller_genotypegvcfs_indel_pass.bed",
+  col_names = c("Chromosome", "Position0", "End", "Depth", "GT")
+) %>%
+  mutate(type = "indel") %>%
+  mutate(min = Position0 - 10, max = Position0 + 10)
 
-# snps <- readRDS("../reads/fAloSap1_snps.rds")
-#
-# snps <- snps %>% mutate(type = ifelse(GT == "0/1" | GT == "1/1", "snp", "ref"))
-#
-# snps_filtered <- snps %>% filter(Chromosome %in% chroms) %>% mutate(Chromosome = as.integer(str_sub(Chromosome, 4, str_length(Chromosome))))
+invariant <- read_tsv(
+  "../gatk4_outputs/fAloSap1_minimap_dedup_readgroups_haplotypecaller_genotypegvcfs_invariant_pass.bed",
+  col_names = c("Chromosome", "Position0", "End", "Depth", "GT"),
+  col_types = c("ciiic")
+) %>%
+  mutate(type = "ref")
 
-# Break SNPs into 1mb windows
-# gt_1mb_window <- snps_filtered %>%
+# Filter SNPs within 10 bp of an indel
+by = join_by(Chromosome, between(Position0, min, max))
+
+# get list of indel-adjacent snps
+indel_adj_snps <- inner_join(snps, indel, by = by) %>%
+  select(1:6) %>% group_by(Chromosome) %>%
+  distinct(Position0.x)
+
+names(indel_adj_snps) <- gsub(".x", "", names(indel_adj_snps))
+
+# filter out snps that are within 10 bp of an indel
+snps_filt <- anti_join(snps, indel_adj_snps)
+
+# include invariant sites alongside filtered snps
+snps_invariant_filt <- bind_rows(snps_filt, invariant) %>% arrange(Chromosome, Position0)
+# 
+# # Break SNPs into 1mb windows
+# ## Calculate genotyping rate within window
+# gt_1mb_window <- snps_invariant_filt %>%
 #   mutate(ints = cut_width(End, width = 1e6, boundary = 0)) %>%
 #   group_by(Chromosome, ints) %>%
 #   summarize(int_start = min(End),
 #             genotype_rate = n()/1e6) %>%
-#   mutate(chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even"))
-#
-# snp_1mb_window <- snps_filtered %>%
+#   mutate(
+#     Chromosome = as.integer(str_sub(Chromosome, 5, str_length(Chromosome) - 1)) - 55956,
+#     chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even")
+#     ) %>%
+#   filter(Chromosome %in% 1:24)
+# 
+# ## Count SNPs in window
+# snp_1mb_window <- snps_invariant_filt %>%
 #   mutate(ints = cut_width(End, width = 1e6, boundary = 0)) %>%
 #   group_by(Chromosome, ints, type) %>%
 #   count() %>% pivot_wider(values_from = n, names_from = type)  %>%
-#   mutate(snp = ifelse(is.na(snp) == T, 0, snp))
-#
+#   mutate(snp = ifelse(is.na(snp) == T, 0, snp)) %>%
+#   mutate(
+#     Chromosome = as.integer(str_sub(Chromosome, 5, str_length(Chromosome) - 1)) - 55956,
+#     chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even")
+#     ) %>%
+#   filter(Chromosome %in% 1:24)
+# 
 # snp_gt_1mb_window <- left_join(gt_1mb_window, snp_1mb_window) %>%
 #   mutate(snp_kb = snp / (1e6/1e3))
 
-# saveRDS(snp_gt_1mb_window, file = "../reads/snp_gt_1mb_window.rds")
+# saveRDS(snp_gt_1mb_window, file = "../gatk4_outputs/snp_gt_1mb_window.rds")
 
-snp_gt_1mb_window <- readRDS("../reads/snp_gt_1mb_window.rds")
+snp_gt_1mb_window <- readRDS("../gatk4_outputs/snp_gt_1mb_window.rds")
 
-# Break SNPs into 50kb windows
-# gt_50kb_window <- snps_filtered %>%
+# # Break SNPs into 50kb windows
+# ## Calculate genotyping rate within window
+# gt_50kb_window <- snps_invariant_filt %>%
 #   mutate(ints = cut_width(End, width = 5e4, boundary = 0)) %>%
 #   group_by(Chromosome, ints) %>%
 #   summarize(int_start = min(End),
-#             genotype_rate = n() / 5e4) %>%
-#   mutate(chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even"))
-#
-# snp_50kb_window <- snps_filtered %>%
+#             genotype_rate = n()/5e4) %>%
+#   mutate(
+#     Chromosome = as.integer(str_sub(Chromosome, 5, str_length(Chromosome) - 1)) - 55956,
+#     chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even")
+#     ) %>%
+#   filter(Chromosome %in% 1:24)
+# 
+# ## Count SNPs in window
+# snp_50kb_window <- snps_invariant_filt %>%
 #   mutate(ints = cut_width(End, width = 5e4, boundary = 0)) %>%
 #   group_by(Chromosome, ints, type) %>%
-#   count() %>% pivot_wider(values_from = n, names_from = type) %>%
-#   mutate(snp = ifelse(is.na(snp) == T, 0, snp))
-#
+#   count() %>% pivot_wider(values_from = n, names_from = type)  %>%
+#   mutate(snp = ifelse(is.na(snp) == T, 0, snp)) %>%
+#   mutate(
+#     Chromosome = as.integer(str_sub(Chromosome, 5, str_length(Chromosome) - 1)) - 55956,
+#     chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even")
+#     ) %>%
+#   filter(Chromosome %in% 1:24)
+# 
 # snp_gt_50kb_window <- left_join(gt_50kb_window, snp_50kb_window) %>%
 #   mutate(snp_kb = snp / (5e4/1e3))
-#
-# saveRDS(snp_gt_50kb_window, file = "../reads/snp_gt_50kb_window.rds")
+# 
+# saveRDS(snp_gt_50kb_window, file = "../gatk4_outputs/snp_gt_50kb_window.rds")
 
-snp_gt_50kb_window <- readRDS("../reads/snp_gt_50kb_window.rds")
+snp_gt_50kb_window <- readRDS("../gatk4_outputs/snp_gt_50kb_window.rds") %>% mutate(window_size = "50kb")
+
+
+
+# # Break SNPs into 100kb windows
+# ## Calculate genotyping rate within window
+# gt_100kb_window <- snps_invariant_filt %>%
+#   mutate(ints = cut_width(End, width = 1e5, boundary = 0)) %>%
+#   group_by(Chromosome, ints) %>%
+#   summarize(int_start = min(End),
+#             genotype_rate = n()/1e5) %>%
+#   mutate(
+#     Chromosome = as.integer(str_sub(Chromosome, 5, str_length(Chromosome) - 1)) - 55956,
+#     chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even")
+#     ) %>%
+#   filter(Chromosome %in% 1:24)
+
+# ## Count SNPs in window
+# snp_100kb_window <- snps_invariant_filt %>%
+#   mutate(ints = cut_width(End, width = 1e5, boundary = 0)) %>%
+#   group_by(Chromosome, ints, type) %>%
+#   count() %>% pivot_wider(values_from = n, names_from = type)  %>%
+#   mutate(snp = ifelse(is.na(snp) == T, 0, snp)) %>%
+#   mutate(
+#     Chromosome = as.integer(str_sub(Chromosome, 5, str_length(Chromosome) - 1)) - 55956,
+#     chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even")
+#     ) %>%
+#   filter(Chromosome %in% 1:24)
+# 
+# snp_gt_100kb_window <- left_join(gt_100kb_window, snp_100kb_window) %>%
+#   mutate(snp_kb = snp / (1e5/1e3))
+# 
+# saveRDS(snp_gt_100kb_window, file = "../gatk4_outputs/snp_gt_100kb_window.rds")
+
+# # Break SNPs into 250kb windows
+# ## Calculate genotyping rate within window
+# gt_250kb_window <- snps_invariant_filt %>%
+#   mutate(ints = cut_width(End, width = 25e4, boundary = 0)) %>%
+#   group_by(Chromosome, ints) %>%
+#   summarize(int_start = min(End),
+#             genotype_rate = n()/25e4) %>%
+#   mutate(
+#     Chromosome = as.integer(str_sub(Chromosome, 5, str_length(Chromosome) - 1)) - 55956,
+#     chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even")
+#     ) %>%
+#   filter(Chromosome %in% 1:24)
+
+# ## Count SNPs in window
+# snp_250kb_window <- snps_invariant_filt %>%
+#   mutate(ints = cut_width(End, width = 25e4, boundary = 0)) %>%
+#   group_by(Chromosome, ints, type) %>%
+#   count() %>% pivot_wider(values_from = n, names_from = type)  %>%
+#   mutate(snp = ifelse(is.na(snp) == T, 0, snp)) %>%
+#   mutate(
+#     Chromosome = as.integer(str_sub(Chromosome, 5, str_length(Chromosome) - 1)) - 55956,
+#     chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even")
+#     ) %>%
+#   filter(Chromosome %in% 1:24)
+# 
+# snp_gt_250kb_window <- left_join(gt_250kb_window, snp_250kb_window) %>%
+#   mutate(snp_kb = snp / (25e4/1e3))
+# 
+# saveRDS(snp_gt_250kb_window, file = "../gatk4_outputs/snp_gt_250kb_window.rds")
+
+# # Break SNPs into 500kb windows
+# ## Calculate genotyping rate within window
+# gt_500kb_window <- snps_invariant_filt %>%
+#   mutate(ints = cut_width(End, width = 5e5, boundary = 0)) %>%
+#   group_by(Chromosome, ints) %>%
+#   summarize(int_start = min(End),
+#             genotype_rate = n()/5e5) %>%
+#   mutate(
+#     Chromosome = as.integer(str_sub(Chromosome, 5, str_length(Chromosome) - 1)) - 55956,
+#     chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even")
+#     ) %>%
+#   filter(Chromosome %in% 1:24)
+
+# ## Count SNPs in window
+# snp_500kb_window <- snps_invariant_filt %>%
+#   mutate(ints = cut_width(End, width = 5e5, boundary = 0)) %>%
+#   group_by(Chromosome, ints, type) %>%
+#   count() %>% pivot_wider(values_from = n, names_from = type)  %>%
+#   mutate(snp = ifelse(is.na(snp) == T, 0, snp)) %>%
+#   mutate(
+#     Chromosome = as.integer(str_sub(Chromosome, 5, str_length(Chromosome) - 1)) - 55956,
+#     chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even")
+#     ) %>%
+#   filter(Chromosome %in% 1:24)
+# 
+# snp_gt_500kb_window <- left_join(gt_500kb_window, snp_500kb_window) %>%
+#   mutate(snp_kb = snp / (5e5/1e3))
+# 
+# saveRDS(snp_gt_500kb_window, file = "../gatk4_outputs/snp_gt_500kb_window.rds")
+
+# # Break SNPs into 10kb windows
+# ## Calculate genotyping rate within window
+# gt_10kb_window <- snps_invariant_filt %>%
+#   mutate(ints = cut_width(End, width = 1e4, boundary = 0)) %>%
+#   group_by(Chromosome, ints) %>%
+#   summarize(int_start = min(End),
+#             genotype_rate = n()/1e4) %>%
+#   mutate(
+#     Chromosome = as.integer(str_sub(Chromosome, 5, str_length(Chromosome) - 1)) - 55956,
+#     chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even")
+#     ) %>%
+#   filter(Chromosome %in% 1:24)
+
+# ## Count SNPs in window
+# snp_10kb_window <- snps_invariant_filt %>%
+#   mutate(ints = cut_width(End, width = 1e4, boundary = 0)) %>%
+#   group_by(Chromosome, ints, type) %>%
+#   count() %>% pivot_wider(values_from = n, names_from = type)  %>%
+#   mutate(snp = ifelse(is.na(snp) == T, 0, snp)) %>%
+#   mutate(
+#     Chromosome = as.integer(str_sub(Chromosome, 5, str_length(Chromosome) - 1)) - 55956,
+#     chrom_odd = ifelse(Chromosome %% 2 == 1, "odd", "even")
+#     ) %>%
+#   filter(Chromosome %in% 1:24)
+# 
+# snp_gt_10kb_window <- left_join(gt_10kb_window, snp_10kb_window) %>%
+#   mutate(snp_kb = snp / (1e4/1e3))
+# 
+# saveRDS(snp_gt_10kb_window, file = "../gatk4_outputs/snp_gt_10kb_window.rds")
 
 # Read depth per 50kb intervals
+
+chroms <- paste0("chr", c(1:24))
 cov_50kb <- read_table(
     "../reads/fAloSap1_minimap_depth_50kb.ucsc.bed",
     col_names = c("Chromosome", "Start", "End", "sum_depth", "mean_depth")
@@ -92,16 +262,21 @@ mean_cov <- cov_50kb %>%
     pull(mean_depth) %>%
     mean()
 ```
-<br>  
+
+<br>\
 Mean coverage across the genome:
+
 ```{r}
 mean_cov %>% kable()
 ```
-<br>  
 
-#### Genome-wide coverage:  
+<br>
+
+#### Genome-wide coverage:
+
 Mean coverage per 50kb intervals across the genome, with mean genome-wide coverage denoted by a red dashed line.
-```{r}
+
+```{r, eval = F}
 chrom_size <- read_tsv("../assembly/sizes.genome.ucsc", col_names = c("Chromosome", "Start", "End"))
 no_cov <- cov_50kb %>% filter(mean_depth < 5)
 
@@ -141,11 +316,13 @@ genome_cov_plot <- cov_50kb %>%
 
 genome_cov_plot
 ```
-<br>  
 
-#### Genome-wide heterozygosity  
+<br>
+
+#### Genome-wide heterozygosity
 
 Using 1mb windows:
+
 ```{r}
 # Filter out windows with < 50% genotyping rate
 
@@ -235,7 +412,7 @@ snp_window_plot_50kb <- snp_gt_50kb_window_filtered %>%
     facet_wrap(
         ~`Chromosome`,
         ncol = 24,
-        strip.position = "top",
+        strip.position = "bottom",
         scales = "free_x"
     ) +
     xlab("") +
@@ -252,18 +429,22 @@ snp_window_plot_50kb <- snp_gt_50kb_window_filtered %>%
         plot.background = element_rect(fill = "white"),
         panel.spacing.x = unit(0, "lines"),
 		axis.title = element_text(size = 14),
-		axis.text = element_text(size = 12)
+		axis.text = element_text(size = 12),
+	strip.background = element_blank(),
+        strip.placement = "outside",
+        strip.text = element_text(size = 14)
     ) +
     scale_color_manual(values = c("dodgerblue4", "cornflowerblue"))
 
-het_cov_plot_50kb <- plot_grid(snp_window_plot_50kb,
-    genome_cov_plot,
-    ncol = 1,
-    align = "v"
-)
+# het_cov_plot_50kb <- plot_grid(snp_window_plot_50kb,
+#     genome_cov_plot,
+#     ncol = 1,
+#     align = "v"
+# )
 
 snp_window_plot_50kb
 ```
+
 ```{r, fig.width = 8}
 snp_hist_50kb <- snp_gt_50kb_window_filtered %>%
     ggplot() +
@@ -283,6 +464,7 @@ snp_hist_50kb <- snp_gt_50kb_window_filtered %>%
 
 snp_hist_50kb
 ```
+
 ```{r}
 snp_gt_50kb_window_filtered %>%
     pull(snp_kb) %>%
@@ -290,15 +472,24 @@ snp_gt_50kb_window_filtered %>%
     kable()
 ```
 
+#### FILTER tag distributions
+
+```{r}
+filt <- read_tsv("../gatk4_outputs/snp_filter_tag.tsv", col_names = c("chrom", "pos", "tag"))
+
+options(scipen=999)
+filt %>% group_by(tag) %>% summarize(pct_tag = n()/nrow(filt) * 100) %>% arrange(-pct_tag)
+```
+
 #### Combined coverage and heterozygosity using 50kb windows
 
-```{r, fig.height= 10}
+```{r, eval = F, fig.height= 10}
 het_cov_plot_50kb
 ```
 
-#### Runs of Homozygosity (ROH)  
-ROH identified using the PLINK 1.9 `--homozyg` function using default parameters except for `--homozyg-kb` set to `100` to allow for detection of ROH > 100kb in length.   
+#### Runs of Homozygosity (ROH)
 
+ROH identified using the PLINK 1.9 `--homozyg` function using default parameters except for `--homozyg-kb` set to `100` to allow for detection of ROH \> 100kb in length.
 
 ```{r, fig.width=10, fig.height=10}
 setwd("/workdir/azwad/shad-genome")
@@ -361,8 +552,6 @@ roh_plot <- shad_roh %>%
 roh_plot
 ```
 
-
-
 #### Heterozygosity vs Other Fish Species
 
 ```{r, dpi = 320, fig.height = 4, fig.width = 6}
@@ -374,8 +563,106 @@ het_fish %>%
     ggplot(aes(x = `Common Name`, y = `Heterozygosity (%)`, fill = Method)) +
     scale_fill_viridis_d(begin = 0, end = 0.5) +
     geom_col() +
-    annotate("segment", x = 9, y = 0.4, xend = 9, yend = 0.25, linewidth = 1, arrow = arrow(length = unit(0.3, "cm"))) +
+    annotate("segment", x = 8, y = 0.37, xend = 8, yend = 0.22, linewidth = 1, arrow = arrow(length = unit(0.3, "cm"))) +
     xlab("Species") +
     coord_flip() +
     theme_classic()
 ```
+### Check the effect of window size on het calculations
+
+Do some data wrangling to create a master heterozygosity dataset
+```{r}
+windows <- c("10kb", "50kb", "100kb", "250kb", "500kb", "1mb")
+
+master_het <- NULL
+for (i in windows) {
+  name = paste0("../gatk4_outputs/snp_gt_", i, "_window.rds")
+  df <- read_rds(name) %>% mutate(window_size = i) %>% filter(genotype_rate >= 0.5)
+  master_het <- bind_rows(master_het, df)
+}
+```
+
+Plot snps per kb distributions by window size:
+```{r, dpi = 320}
+library(ggsci)
+library(cowplot)
+library(ggsignif)
+snps_kb_dist_plot <- master_het %>%
+  mutate(window_size = factor(window_size, levels = windows)) %>%
+  ggplot(aes(
+    x = window_size,
+    y = snp_kb,
+    color = window_size,
+    fill = window_size
+  )) +
+  geom_violin(trim = T, alpha = 0.5, linewidth = 1.05) +
+  geom_boxplot(
+    fill = "white",
+    width = 0.08,
+    outliers = F
+  ) + 
+  scale_fill_d3() + scale_color_d3() + theme_cowplot(font_size = 22) + theme(legend.position = "none") + ylab("SNPs per kilobase") + xlab("Window size")
+
+snps_kb_dist_plot
+```
+Plot mean snps per kb:
+```{r, dpi = 320}
+mean_snps_plot <- master_het %>%
+  mutate(window_size = factor(window_size, levels = windows)) %>%
+  group_by(window_size) %>% 
+  summarize(mean_snps_kb = mean(snp_kb)) %>% 
+  ggplot(aes(
+    x = window_size,
+    y = mean_snps_kb,
+    color = window_size,
+    fill = window_size
+  )) +
+  geom_point(pch = 21, color = "white", size = 10) + scale_fill_d3() + scale_color_d3() + theme_cowplot(font_size = 22) + theme(legend.position = "none") + ylab("Mean SNPs per kilobase") + xlab("Window size")
+
+mean_snps_plot
+
+median_snps_plot <- master_het %>%
+  mutate(window_size = factor(window_size, levels = windows)) %>%
+  group_by(window_size) %>% 
+  summarize(median_snps_kb = median(snp_kb)) %>% 
+  ggplot(aes(
+    x = window_size,
+    y = median_snps_kb,
+    color = window_size,
+    fill = window_size
+  )) +
+  geom_point(pch = 21, color = "white", size = 10) + scale_fill_d3() + scale_color_d3() + theme_cowplot(font_size = 22) + theme(legend.position = "none") + ylab("Median SNPs per kilobase") + xlab("Window size")
+
+median_snps_plot
+```
+```{r, dpi = 320}
+
+het_window_grid <- plot_grid(snps_kb_dist_plot + theme(axis.title.x = element_blank()), mean_snps_plot, nrow = 2, labels = "auto", align = "v")
+
+ggsave("../plots/het_window_grid.pdf", het_window_grid, dpi = 320, height = 12, width = 15)
+```
+
+
+Plot genotype_rate differences before filtering:
+
+```{r}
+master_het_nofilt <- NULL
+for (i in windows) {
+  name = paste0("../gatk4_outputs/snp_gt_", i, "_window.rds")
+  df <- read_rds(name) %>% mutate(window_size = i)
+  master_het_nofilt <- bind_rows(master_het, df)
+}
+
+master_het_nofilt %>%
+  mutate(window_size = factor(window_size, levels = windows)) %>%
+  ggplot(aes(
+    x = window_size,
+    y = genotype_rate,
+    color = window_size,
+    fill = window_size
+  )) +
+  geom_violin(trim = F, alpha = 0.5) + scale_fill_d3() + scale_color_d3() + theme_cowplot(font_size = 22) + theme(legend.position = "none") + ylab("Genotype rate per window") + xlab("Window size")
+
+```
+
+

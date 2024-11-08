@@ -32,14 +32,14 @@ setwd("/workdir/azwad/shad-genome")
 
 shad_repeats <-
     read_tsv(
-        "repeats/genome_mask_final/GCF_018492685.fa_ucsc.tsv",
+        "/workdir/azwad/shad-genome/repeats/genome_mask/fAloSap1_repeats.out",
         col_names = c("chrom", "start", "end", "type")
     ) %>% mutate(type = gsub("\\/.*", "", type), type = ifelse(type == "SINE?", "SINE", type))
 
 chroms <- paste0("chr", c(1:24))
 
 chrom_sizes <-
-    read_tsv("assembly/sizes.genome.ucsc",
+    read_tsv("/workdir/azwad/shad-genome/assembly/sizes.genome.ucsc",
         col_names = c("chrom", "start", "length")
     ) %>%
     select(c(chrom, length)) %>%
@@ -49,7 +49,7 @@ chrom_sizes <-
 repeat_plot <- shad_repeats %>%
     filter(chrom %in% chroms) %>%
     mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
-	dplyr::rename(Class = type)  %>% 
+    dplyr::rename(Class = type) %>%
     ggplot() +
     geom_rect(
         data = chrom_sizes,
@@ -78,10 +78,10 @@ repeat_plot <- shad_repeats %>%
     theme_minimal() +
     theme(
         strip.text.y.left = element_text(angle = 0),
-        plot.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white", colour = "#ffffff00"),
         axis.title = element_text(size = 18),
-		axis.text = element_text(size = 14),
-		strip.text = element_text(size = 16)
+        axis.text = element_text(size = 14),
+        strip.text = element_text(size = 16)
     ) +
     coord_flip() +
     facet_wrap(~`chrom`, nrow = length(chroms), strip.position = "left")
@@ -94,7 +94,7 @@ repeat_plot
 #### Separating repeats by type to identify any spacial patterns of distribution on the genome
 
 ```{r, fig.height=18, fig.width= 12}
-shad_repeats %>%
+repeats_by_pos <- shad_repeats %>%
     filter(chrom %in% chroms) %>%
     mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
     left_join(chrom_sizes) %>%
@@ -107,6 +107,8 @@ shad_repeats %>%
     xlab("Relative Genomic Position") +
     theme_classic() +
     theme(legend.position = "none")
+
+ggsave("../plots/repeats_by_pos.pdf", repeats_by_pos, dpi = 320, height = 12, width = 15)
 
 shad_repeats %>%
     filter(chrom %in% chroms) %>%
@@ -126,7 +128,7 @@ shad_repeats %>%
 ```{r, fig.height=8, fig.width=18}
 ## Code from Kristina Galagova; See: https://github.com/oushujun/EDTA/issues/92
 setwd("/workdir/azwad/shad-genome")
-KimuraDistance <- read.csv("repeats/genome_mask_final/GCF_018492685.fa.distance", sep = " ")
+KimuraDistance <- read.csv("repeats/genome_mask_2/GCF_018492685.fa.distance", sep = " ")
 
 # add here the genome size in bp
 genomes_size <- 903581644
@@ -150,7 +152,35 @@ kd_melt %>%
     mutate(variable = gsub("\\..*", "", variable), variable = ifelse(variable == "SINE?", "SINE", variable)) %>%
     ggplot(aes(fill = variable, y = norm, x = Div)) +
     geom_bar(position = "stack", stat = "identity", color = "black") +
-    scale_fill_viridis(discrete = T) +
+    scale_fill_viridis_d() +
+    theme_classic() +
+    xlab("Kimura substitution level") +
+    ylab("Percent of the genome (%)") +
+    labs(fill = "") +
+    coord_cartesian(xlim = c(0, 55)) +
+    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 18))
+
+### Just DNA elements
+kd_melt %>%
+    mutate(variable = gsub("\\..*", "", variable), variable = ifelse(variable == "SINE?", "SINE", variable)) %>%
+    filter(variable == "DNA") %>%
+    ggplot(aes(fill = variable, y = norm, x = Div)) +
+    geom_bar(position = "stack", stat = "identity", color = "black") +
+    scale_fill_viridis_d() +
+    theme_classic() +
+    xlab("Kimura substitution level") +
+    ylab("Percent of the genome (%)") +
+    labs(fill = "") +
+    coord_cartesian(xlim = c(0, 55)) +
+    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 18))
+
+### Just "Unknown" elements
+kd_melt %>%
+    mutate(variable = gsub("\\..*", "", variable), variable = ifelse(variable == "SINE?", "SINE", variable)) %>%
+    filter(variable == "Unknown") %>%
+    ggplot(aes(fill = variable, y = norm, x = Div)) +
+    geom_bar(position = "stack", stat = "identity", color = "black") +
+    scale_fill_viridis_d() +
     theme_classic() +
     xlab("Kimura substitution level") +
     ylab("Percent of the genome (%)") +
@@ -164,9 +194,9 @@ kd_melt %>%
 ```{r, fig.height=4, fig.width=12, dpi = 320}
 setwd("/workdir/azwad/shad-genome")
 
-shad <- read_tsv("repeats/genome_mask_final/GCF_018492685.fa.div")
-allis <- read_tsv("other_genomes/Alosa_alosa/repeats/genome_mask_final/GCA_017589495.2_AALO_Geno_1.1_genomic.fna.div")
-herring <- read_tsv("other_genomes/Ch_v2.0.2/repeats/genome_mask_final/GCF_900700415.2_Ch_v2.0.2_genomic.fna.div")
+shad <- read_tsv("repeats/genome_mask_2/GCF_018492685.fa.div")
+allis <- read_tsv("other_genomes/Alosa_alosa/repeats/genome_mask_final_2/GCA_017589495.2_AALO_Geno_1.1_genomic.fna.div")
+herring <- read_tsv("other_genomes/Ch_v2.0.2/repeats/genome_mask_final_2/GCF_900700415.2_Ch_v2.0.2_genomic.fna.div")
 
 # add here the genome size in bp
 genome_size_shad <- 903581644

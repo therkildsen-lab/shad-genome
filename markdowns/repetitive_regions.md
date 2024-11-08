@@ -37,7 +37,7 @@ setwd("/workdir/azwad/shad-genome")
 
 shad_repeats <-
     read_tsv(
-        "repeats/genome_mask_final/GCF_018492685.fa_ucsc.tsv",
+        "repeats/genome_mask/fAloSap1_repeats.out",
         col_names = c("chrom", "start", "end", "type")
     ) %>% mutate(type = gsub("\\/.*", "", type), type = ifelse(type == "SINE?", "SINE", type))
 
@@ -54,7 +54,7 @@ chrom_sizes <-
 repeat_plot <- shad_repeats %>%
     filter(chrom %in% chroms) %>%
     mutate(chrom = as.integer(str_sub(chrom, 4, str_length(chrom)))) %>%
-    dplyr::rename(Class = type)  %>% 
+    dplyr::rename(Class = type) %>%
     ggplot() +
     geom_rect(
         data = chrom_sizes,
@@ -83,7 +83,7 @@ repeat_plot <- shad_repeats %>%
     theme_minimal() +
     theme(
         strip.text.y.left = element_text(angle = 0),
-        plot.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white", colour = "#ffffff00"),
         axis.title = element_text(size = 18),
         axis.text = element_text(size = 14),
         strip.text = element_text(size = 16)
@@ -138,7 +138,7 @@ shad_repeats %>%
 ``` r
 ## Code from Kristina Galagova; See: https://github.com/oushujun/EDTA/issues/92
 setwd("/workdir/azwad/shad-genome")
-KimuraDistance <- read.csv("repeats/genome_mask_final/GCF_018492685.fa.distance", sep = " ")
+KimuraDistance <- read.csv("repeats/genome_mask_2/GCF_018492685.fa.distance", sep = " ")
 
 # add here the genome size in bp
 genomes_size <- 903581644
@@ -166,7 +166,7 @@ kd_melt %>%
     mutate(variable = gsub("\\..*", "", variable), variable = ifelse(variable == "SINE?", "SINE", variable)) %>%
     ggplot(aes(fill = variable, y = norm, x = Div)) +
     geom_bar(position = "stack", stat = "identity", color = "black") +
-    scale_fill_viridis(discrete = T) +
+    scale_fill_viridis_d() +
     theme_classic() +
     xlab("Kimura substitution level") +
     ylab("Percent of the genome (%)") +
@@ -177,14 +177,50 @@ kd_melt %>%
 
 ![](repetitive_regions_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
 
+``` r
+### Just DNA elements
+kd_melt %>%
+    mutate(variable = gsub("\\..*", "", variable), variable = ifelse(variable == "SINE?", "SINE", variable)) %>%
+    filter(variable == "DNA") %>%
+    ggplot(aes(fill = variable, y = norm, x = Div)) +
+    geom_bar(position = "stack", stat = "identity", color = "black") +
+    scale_fill_viridis_d() +
+    theme_classic() +
+    xlab("Kimura substitution level") +
+    ylab("Percent of the genome (%)") +
+    labs(fill = "") +
+    coord_cartesian(xlim = c(0, 55)) +
+    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 18))
+```
+
+![](repetitive_regions_files/figure-gfm/unnamed-chunk-3-3.png)<!-- -->
+
+``` r
+### Just "Unknown" elements
+kd_melt %>%
+    mutate(variable = gsub("\\..*", "", variable), variable = ifelse(variable == "SINE?", "SINE", variable)) %>%
+    filter(variable == "Unknown") %>%
+    ggplot(aes(fill = variable, y = norm, x = Div)) +
+    geom_bar(position = "stack", stat = "identity", color = "black") +
+    scale_fill_viridis_d() +
+    theme_classic() +
+    xlab("Kimura substitution level") +
+    ylab("Percent of the genome (%)") +
+    labs(fill = "") +
+    coord_cartesian(xlim = c(0, 55)) +
+    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 18))
+```
+
+![](repetitive_regions_files/figure-gfm/unnamed-chunk-3-4.png)<!-- -->
+
 #### Comparing composition of repetitive elements between Atlantic herring, Allis shad, and American shad
 
 ``` r
 setwd("/workdir/azwad/shad-genome")
 
-shad <- read_tsv("repeats/genome_mask_final/GCF_018492685.fa.div")
-allis <- read_tsv("other_genomes/Alosa_alosa/repeats/genome_mask_final/GCA_017589495.2_AALO_Geno_1.1_genomic.fna.div")
-herring <- read_tsv("other_genomes/Ch_v2.0.2/repeats/genome_mask_final/GCF_900700415.2_Ch_v2.0.2_genomic.fna.div")
+shad <- read_tsv("repeats/genome_mask_2/GCF_018492685.fa.div")
+allis <- read_tsv("other_genomes/Alosa_alosa/repeats/genome_mask_final_2/GCA_017589495.2_AALO_Geno_1.1_genomic.fna.div")
+herring <- read_tsv("other_genomes/Ch_v2.0.2/repeats/genome_mask_final_2/GCF_900700415.2_Ch_v2.0.2_genomic.fna.div")
 
 # add here the genome size in bp
 genome_size_shad <- 903581644

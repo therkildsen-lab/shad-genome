@@ -14,4 +14,7 @@ reads/
 repeats/
 psmc/
 last/
+logs
+gatk4_outputs
 .RData
+.Rhistory

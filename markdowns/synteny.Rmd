@@ -130,10 +130,10 @@ combined_ref <- rbind(medaka_ref_rev, shad_ref)
 # medaka <- synteny_tab_corrected_filtered %>% select(medaka_chr, medaka_start, medaka_end)
 
 shad <- synteny_tab_filtered %>%
-    filter(length > 200) %>%
+    filter(length > 200, shad_chr == "shad_chr6") %>%
     select(shad_chr, shad_start, shad_end)
 medaka <- synteny_tab_filtered %>%
-    filter(length > 200) %>%
+    filter(length > 200, shad_chr == "shad_chr6") %>%
     select(medaka_chr, medaka_start, medaka_end)
 ```
 
@@ -248,6 +248,51 @@ synteny_tab_filtered <-
     )
 ```
 
+What percentage of alignments map to one or more chroms? (How high is synteny between chroms)
+
+```{r, dpi = 320, message=FALSE}
+# visualize pairwise relationships
+synteny_tab_filtered %>% 
+  group_by(shad_chr, allis_chr) %>% 
+  summarize(count = n()) %>% 
+  mutate(pct = count/sum(count) * 100) %>% 
+  arrange(-pct) %>% 
+  ggplot(aes(x = shad_chr, y = pct, fill = allis_chr, group = pct)) +
+  geom_bar(position = "stack", stat = "identity")
+
+# what is the mean pct of alignments (weighted mean)
+synteny_tab_filtered %>% 
+  group_by(shad_chr, allis_chr) %>% 
+  summarize(count = n()) %>% 
+  mutate(pct = count/sum(count) * 100, total = sum(count)) %>% 
+  slice_max(pct, n = 1) %>% 
+  ungroup() %>% 
+  mutate(weight = total/sum(total)) %>% 
+  summarize(mean_weighted = sum(pct * weight))
+
+# what is the mean pct of alignments (weighted mean)
+synteny_tab_filtered %>% 
+  group_by(shad_chr, allis_chr) %>% 
+  summarize(count = n()) %>% 
+  mutate(pct = count/sum(count) * 100, total = sum(count)) %>% 
+  slice_max(pct, n = 1) %>% 
+  ungroup() %>% 
+  mutate(weight = total/sum(total)) %>% 
+  summarize(mean_weighted = sum(pct * weight))
+
+
+
+# ID rearrangements
+synteny_tab_filtered %>% 
+  group_by(shad_chr, allis_chr) %>% 
+  summarize(count = n()) %>% 
+  mutate(pct = count/sum(count) * 100, total = sum(count)) %>% 
+  ungroup() %>% 
+  filter(pct < 50) %>% arrange(-pct)
+
+
+
+```
 
 
 ```{r, eval = F}
