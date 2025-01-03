@@ -107,10 +107,10 @@ combined_ref <- rbind(medaka_ref_rev, shad_ref)
 # medaka <- synteny_tab_corrected_filtered %>% select(medaka_chr, medaka_start, medaka_end)
 
 shad <- synteny_tab_filtered %>%
-    filter(length > 200) %>%
+    filter(length > 200, shad_chr == "shad_chr6") %>%
     select(shad_chr, shad_start, shad_end)
 medaka <- synteny_tab_filtered %>%
-    filter(length > 200) %>%
+    filter(length > 200, shad_chr == "shad_chr6") %>%
     select(medaka_chr, medaka_start, medaka_end)
 ```
 
@@ -222,6 +222,98 @@ synteny_tab_filtered <-
     )
 ```
 
+What percentage of alignments map to one or more chroms? (How high is
+synteny between chroms)
+
+``` r
+# visualize pairwise relationships
+synteny_tab_filtered %>% 
+  group_by(shad_chr, allis_chr) %>% 
+  summarize(count = n()) %>% 
+  mutate(pct = count/sum(count) * 100) %>% 
+  arrange(-pct) %>% 
+  ggplot(aes(x = shad_chr, y = pct, fill = allis_chr, group = pct)) +
+  geom_bar(position = "stack", stat = "identity")
+```
+
+![](synteny_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+``` r
+# what is the mean pct of alignments (weighted mean)
+synteny_tab_filtered %>% 
+  group_by(shad_chr, allis_chr) %>% 
+  summarize(count = n()) %>% 
+  mutate(pct = count/sum(count) * 100, total = sum(count)) %>% 
+  slice_max(pct, n = 1) %>% 
+  ungroup() %>% 
+  mutate(weight = total/sum(total)) %>% 
+  summarize(mean_weighted = sum(pct * weight))
+```
+
+    ## # A tibble: 1 × 1
+    ##   mean_weighted
+    ##           <dbl>
+    ## 1          83.9
+
+``` r
+# what is the mean pct of alignments (weighted mean)
+synteny_tab_filtered %>% 
+  group_by(shad_chr, allis_chr) %>% 
+  summarize(count = n()) %>% 
+  mutate(pct = count/sum(count) * 100, total = sum(count)) %>% 
+  slice_max(pct, n = 1) %>% 
+  ungroup() %>% 
+  mutate(weight = total/sum(total)) %>% 
+  summarize(mean_weighted = sum(pct * weight))
+```
+
+    ## # A tibble: 1 × 1
+    ##   mean_weighted
+    ##           <dbl>
+    ## 1          83.9
+
+``` r
+# ID rearrangements
+synteny_tab_filtered %>% 
+  group_by(shad_chr, allis_chr) %>% 
+  summarize(count = n()) %>% 
+  mutate(pct = count/sum(count) * 100, total = sum(count)) %>% 
+  ungroup() %>% 
+  filter(pct < 50) %>% arrange(-pct)
+```
+
+    ## # A tibble: 552 × 5
+    ##    shad_chr   allis_chr count   pct total
+    ##    <chr>      <chr>     <int> <dbl> <int>
+    ##  1 shad_chr1  chr17       639  2.49 25667
+    ##  2 shad_chr4  chr4        452  2.44 18551
+    ##  3 shad_chr4  chr16       435  2.34 18551
+    ##  4 shad_chr2  chr1        449  1.95 23072
+    ##  5 shad_chr24 chr6        322  1.93 16662
+    ##  6 shad_chr16 chr22       319  1.89 16885
+    ##  7 shad_chr14 chr11       288  1.81 15892
+    ##  8 shad_chr3  chr22       365  1.81 20205
+    ##  9 shad_chr3  chr7        363  1.80 20205
+    ## 10 shad_chr2  chr23       398  1.73 23072
+    ## # ℹ 542 more rows
+
+``` r
+# what about by length?
+rearrangements_len <- synteny_tab_filtered %>% 
+  group_by(shad_chr, allis_chr) %>% 
+  summarize(count = n(), cum_len = sum(length)) %>% 
+   mutate(pct = count/sum(count) * 100, total = sum(count)) %>% 
+  ungroup() %>% 
+  mutate(arr = ifelse(pct > 50, "syntenic", "rearrangement")) %>% 
+  group_by(shad_chr, arr) %>% 
+  summarize(total_len = sum(cum_len)) %>% 
+  ungroup() %>% group_by(shad_chr) %>% mutate(pct_len = total_len/sum(total_len) * 100) 
+
+rearrangements_len %>% filter(arr == "rearrangement") %>% pull(pct_len) %>% mean()
+```
+
+    ## [1] 5.234034
+
 ``` r
 shad_ref <-
     read_tsv("/workdir/azwad/shad-genome/assembly/sizes.genome.ucsc", col_names = F) %>%
@@ -322,7 +414,7 @@ circos.track(track.index = get.current.track.index(), panel.fun = function(x, y)
 circos.genomicLink(shad, allis, col = shad_colors$color)
 ```
 
-![](synteny_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](synteny_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ### Synteny across all chroms individually
 
