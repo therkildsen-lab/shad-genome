@@ -290,8 +290,18 @@ synteny_tab_filtered %>%
   ungroup() %>% 
   filter(pct < 50) %>% arrange(-pct)
 
+# what about by length?
+rearrangements_len <- synteny_tab_filtered %>% 
+  group_by(shad_chr, allis_chr) %>% 
+  summarize(count = n(), cum_len = sum(length)) %>% 
+   mutate(pct = count/sum(count) * 100, total = sum(count)) %>% 
+  ungroup() %>% 
+  mutate(arr = ifelse(pct > 50, "syntenic", "rearrangement")) %>% 
+  group_by(shad_chr, arr) %>% 
+  summarize(total_len = sum(cum_len)) %>% 
+  ungroup() %>% group_by(shad_chr) %>% mutate(pct_len = total_len/sum(total_len) * 100) 
 
-
+rearrangements_len %>% filter(arr == "rearrangement") %>% pull(pct_len) %>% mean()
 ```
 
 
