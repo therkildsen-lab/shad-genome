@@ -2,7 +2,7 @@
 
 This repository contains the scripts used to analyze the American shad (Alosa sapidissima) reference genome assembly fAloSap1.pri.
 
-The results of these analyses were published in **Genome Biology and Evolution** here:
+The results of these analyses were published in *Genome Biology and Evolution* here:
 https://doi.org/10.1093/gbe/evae276
 
 <br>
