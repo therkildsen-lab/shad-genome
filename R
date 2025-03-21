@@ -1,79 +1,0 @@
-
-R version 4.2.1 (2022-06-23) -- "Funny-Looking Kid"
-Copyright (C) 2022 The R Foundation for Statistical Computing
-Platform: x86_64-pc-linux-gnu (64-bit)
-
-R is free software and comes with ABSOLUTELY NO WARRANTY.
-You are welcome to redistribute it under certain conditions.
-Type 'license()' or 'licence()' for distribution details.
-
-  Natural language support but running in an English locale
-
-R is a collaborative project with many contributors.
-Type 'contributors()' for more information and
-'citation()' on how to cite R or R packages in publications.
-
-Type 'demo()' for some demos, 'help()' for on-line help, or
-'help.start()' for an HTML browser interface to help.
-Type 'q()' to quit R.
-
-> library(psmcr)
-> library(pegas)
-Loading required package: ape
-
-Attaching package: ‘pegas’
-
-The following object is masked from ‘package:ape’:
-
-    mst
-
-> 
-> args <- commandArgs(trailingOnly = TRUE)
-> vcf <- as.character(args[1])
-> ref <- as.character(args[2])
-> 
-> # Create a diploid consensus DNAbin object (equivalent to vcf2fq in the original PSMC)
-> sample_diploid <- VCF2DNAbin(
-+     vcf,
-+     refgenome = ref,
-+     individual = 1,
-+     quiet = FALSE
-+ )
-Scanning 1000 MBScanning 2000 MBScanning 3000 MBScanning 4000 MBScanning 5000 MBScanning 6000 MBScanning 7000 MBScanning 8000 MBScanning 9000 MBScanning 10000 MBScanning 11000 MBScanning 12000 MBScanning 13000 MBScanning 14000 MBScanning 15000 MBScanning 16000 MBScanning 17000 MBScanning 18000 MBScanning 19000 MBScanning 20000 MBScanning 21000 MBScanning 22000 MBScanning 23000 MBScanning 24000 MBScanning 25000 MBScanning 26000 MBScanning 27000 MBScanning 28000 MBScanning 29000 MBScanning 30000 MBScanning 31000 MBScanning 32000 MBScanning 33000 MBScanning 34000 MBScanning 35000 MBScanning 36000 MBScanning 37000 MBScanning 38000 MBScanning 39000 MBScanning 40000 MBScanning 41000 MBScanning 42000 MBScanning 43000 MBScanning 44000 MBScanning 45000 MBScanning 46000 MBScanning 47000 MBScanning 48000 MBScanning 49000 MBScanning 50000 MBScanning 51000 MBScanning 52000 MBScanning 53000 MBScanning 54000 MBScanning 55000 MBScanning 56000 MBScanning 57000 MBScanning 58000 MBScanning 59000 MBScanning 60000 MBScanning 61000 MBScanning 62000 MBScanning 63000 MBScanning 64000 MBScanning 65000 MBScanning 66000 MBScanning 67000 MBScanning 68000 MBScanning 69000 MBScanning 70000 MBScanning 71000 MBScanning 72000 MBScanning 73000 MBScanning 74000 MBScanning 75000 MBScanning 76000 MBScanning 77000 MBScanning 78000 MBScanning 79000 MBScanning 80000 MBScanning 81000 MBScanning 82000 MBScanning 83000 MBScanning 84000 MBScanning 85000 MBScanning 86000 MBScanning 87000 MBScanning 88000 MBScanning 89000 MBScanning 90000.01 MBScanning 91000.01 MBScanning 92000.01 MBScanning 93000.01 MBScanning 94000.01 MBScanning 95000.01 MBScanning 96000.01 MBScanning 96451.06 MB
-Done.
-> 
-> # Bin the consensus sequence
-> sample_diploid_binned <- seqBinning(
-+     sample_diploid,
-+     bin.size = 100
-+ )
-> 
-> # Run PSMC with settings recommended for humans, 100 bootstraps, 16 threads for bootstrapping
-> sample_psmc <- psmc(
-+     sample_diploid_binned,
-+     parapattern = "4+25*2+4+6",
-+     maxt = 15,
-+     niters = 25,
-+     trratio = 5,
-+     B = 100,
-+     trunksize = 5e+05,
-+     decoding = FALSE,
-+     quiet = FALSE,
-+     raw.output = FALSE,
-+     mc.cores = 16
-+ )
-Iteration 1/25...Iteration 2/25...Iteration 3/25...Iteration 4/25...Iteration 5/25...Iteration 6/25...Iteration 7/25...Iteration 8/25...Iteration 9/25...Iteration 10/25...Iteration 11/25...Iteration 12/25...Iteration 13/25...Iteration 14/25...Iteration 15/25...Iteration 16/25...Iteration 17/25...Iteration 18/25...Iteration 19/25...Iteration 20/25...Iteration 21/25...Iteration 22/25...Iteration 23/25...Iteration 24/25...Iteration 25/25... Done.
-Running parallel bootstraps... Done.
-Warning message:
-In psmc(sample_diploid_binned, parapattern = "4+25*2+4+6", maxt = 15,  :
-  some sequences shorter than 'trunksize'
-> 
-> # Save the PSMC object for plotting later
-> saveRDS(
-+     sample_psmc,
-+     paste0(tools::file_path_sans_ext(basename(vcf)), "_psmc.rds")
-+ )
-> 
-> proc.time()
-     user    system   elapsed 
-237027.89    487.08  21032.63 
